@@ -1,11 +1,10 @@
 // Copyright 2023 LandscapeCombinator. All Rights Reserved.
 
 using UnrealBuildTool;
-using System.IO;
 
-public class BuildingFromSpline : ModuleRules
+public class HeightmapModifier : ModuleRules
 {
-	public BuildingFromSpline(ReadOnlyTargetRules Target) : base(Target)
+	public HeightmapModifier(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -15,24 +14,29 @@ public class BuildingFromSpline : ModuleRules
 			{
 				"Core",
 			}
-			);
+		);
 			
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+				// Unreal Dependencies
 				"Projects",
 				"InputCore",
 				"EditorFramework",
 				"UnrealEd",
 				"ToolMenus",
 				"CoreUObject",
+				"Foliage",
 				"Engine",
-				"GeometryCore",
-				"GeometryFramework",
-				"GeometryScriptingCore",
-				"GeometryScriptingEditor"
+				"Landscape",
+				"LandscapeEditor",
+				
+				// Other Dependencies
+				"GDALInterface",
+				"LandscapeUtils",
+				"ConsoleHelpers"
 			}
-			);
+		);
 	}
 }

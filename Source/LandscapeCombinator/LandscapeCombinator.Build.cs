@@ -17,18 +17,19 @@ public class LandscapeCombinator : ModuleRules
 		foreach (string DLLFile in Directory.GetFiles(Path.Combine(PluginDirectory, "Source", "ThirdParty", "GDAL", "bin")))
 			RuntimeDependencies.Add(Path.Combine(PluginDirectory, "Binaries", "Win64", Path.GetFileName(DLLFile)), DLLFile);
 
-		// Unreal Dependencies
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
+				// Unreal Engine dependencies
+				"Core"
 			}
-			);
-			
-		
+		);
+
+
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+				// Unreal Engine dependencies
 				"Projects",
 				"InputCore",
 				"EditorFramework",
@@ -38,15 +39,20 @@ public class LandscapeCombinator : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"Foliage",
 				"Landscape",
 				"LandscapeEditor",
-				"HTTP",
-				"XmlParser",
 				"PropertyEditor",
-				"Foliage",
-				"FoliageEdit",
-				"PCG"
-            }
-			);
+
+				// Other dependencies
+				"GDALInterface",
+				"FileDownloader",
+				"ConcurrencyHelpers",
+				"LandscapeUtils",
+				"Coordinates",
+				"HeightmapModifier",
+				"ConsoleHelpers"
+			}
+		);
 	}
 }
