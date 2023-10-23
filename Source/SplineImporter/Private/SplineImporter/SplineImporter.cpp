@@ -346,7 +346,6 @@ void ASplineImporter::GenerateLandscapeSplines(
 	LandscapeSplinesComponent->AttachToComponent(Landscape->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	LandscapeSplinesComponent->MarkRenderStateDirty();
 	LandscapeSplinesComponent->PostEditChange();
-
 }
 
 void ASplineImporter::AddLandscapeSplinesPoints(
@@ -427,15 +426,7 @@ void ASplineImporter::AddLandscapeSplines(
 		NewSegment->Connections[0].ControlPoint = ControlPoint1;
 		NewSegment->Connections[1].ControlPoint = ControlPoint2;
 
-		NewSegment->Connections[0].SocketName = ControlPoint1->GetBestConnectionTo(ControlPoint2->Location);
-		NewSegment->Connections[1].SocketName = ControlPoint2->GetBestConnectionTo(ControlPoint1->Location);
-
-		FVector Location1, Location2;
-		FRotator Rotation1, Rotation2;
-		ControlPoint1->GetConnectionLocationAndRotation(NewSegment->Connections[0].SocketName, Location1, Rotation1);
-		ControlPoint2->GetConnectionLocationAndRotation(NewSegment->Connections[1].SocketName, Location2, Rotation2);
-
-		float TangentLen = (Location2 - Location1).Size();
+		float TangentLen = (ControlPoint2->Location - ControlPoint1->Location).Size() / LandscapeSplinesStraightness;
 		NewSegment->Connections[0].TangentLen = TangentLen;
 		NewSegment->Connections[1].TangentLen = TangentLen;
 		NewSegment->AutoFlipTangents();
@@ -445,7 +436,7 @@ void ASplineImporter::AddLandscapeSplines(
 
 		ControlPoint1->AutoCalcRotation();
 		ControlPoint2->AutoCalcRotation();
-
+		
 		ControlPoint1->UpdateSplinePoints();
 		ControlPoint2->UpdateSplinePoints();
 	}

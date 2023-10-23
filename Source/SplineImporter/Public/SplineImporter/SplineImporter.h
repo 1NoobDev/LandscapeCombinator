@@ -63,6 +63,12 @@ public:
 	)
 	bool bRestrictArea = false;
 
+	/* Increasing this value (before generating splines) makes your landscape splines less curvy. This does not apply to regular splines. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
+		meta = (EditCondition = "bUseLandscapeSplines", EditConditionHides, DisplayPriority = "1")
+	)
+	double LandscapeSplinesStraightness = 1;
+
 	/* Use a cube or another rectangular actor to specify the area on which you want to import splines.
 	 * Splines will be imported on `ActorToPlaceSplines`. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",

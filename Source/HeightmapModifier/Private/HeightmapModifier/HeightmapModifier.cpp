@@ -207,7 +207,7 @@ void UHeightmapModifier::BlendWithLandscape()
 			*LandscapeToBlendWith->GetActorLabel(), OtherX1, OtherX2, OtherY1, OtherY2
 		);
 		FMessageDialog::Open(EAppMsgType::Ok, FText::Format(
-			LOCTEXT("UHeightmapModifier::BlendWithLandscape::Finished", "Finished blending with Landscape {0}."),
+			LOCTEXT("UHeightmapModifier::BlendWithLandscape::Finished", "Finished blending with Landscape {0}. Press Ctrl-Z to cancel the modifications."),
 			FText::FromString(LandscapeToBlendWith->GetActorLabel())
 		));
 		return;
