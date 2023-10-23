@@ -14,7 +14,7 @@
 
 #define LOCTEXT_NAMESPACE "FLandscapeUtilsModule"
 
-ALandscape* LandscapeUtils::SpawnLandscape(TArray<FString> Heightmaps, FString LandscapeLabel)
+ALandscape* LandscapeUtils::SpawnLandscape(TArray<FString> Heightmaps, FString LandscapeLabel, bool bDropData)
 {
 	if (Heightmaps.IsEmpty())
 	{
@@ -113,6 +113,12 @@ ALandscape* LandscapeUtils::SpawnLandscape(TArray<FString> Heightmaps, FString L
 	FIntPoint ComponentCount(8, 8);
 
 	FLandscapeImportHelper::ChooseBestComponentSizeForImport(TotalWidth, TotalHeight, QuadsPerSubsection, SectionsPerComponent, ComponentCount);
+
+	if (bDropData)
+	{
+		ComponentCount[0]--;
+		ComponentCount[1]--;
+	}
 	
 	int SizeX = ComponentCount.X * QuadsPerSubsection * SectionsPerComponent + 1;
 	int SizeY = ComponentCount.Y * QuadsPerSubsection * SectionsPerComponent + 1;

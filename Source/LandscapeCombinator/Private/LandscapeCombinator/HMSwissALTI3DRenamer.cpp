@@ -6,7 +6,7 @@
 
 int HMSwissALTI3DRenamer::TileToX(FString Tile) const
 {
-	FRegexPattern Pattern(TEXT("swissalti3d_\\d+_(\\d+)-\\d+/"));
+	FRegexPattern Pattern(TEXT("_(\\d+)-\\d+_"));
 	FRegexMatcher Matcher(Pattern, Tile);
 	Matcher.FindNext();
 	FString X = Matcher.GetCaptureGroup(1);
@@ -15,7 +15,7 @@ int HMSwissALTI3DRenamer::TileToX(FString Tile) const
 
 int HMSwissALTI3DRenamer::TileToY(FString Tile) const
 {
-	FRegexPattern Pattern(TEXT("swissalti3d_\\d+_\\d+-(\\d+)/"));
+	FRegexPattern Pattern(TEXT("_\\d+-(\\d+)_"));
 	FRegexMatcher Matcher(Pattern, Tile);
 	Matcher.FindNext();
 	FString Y = Matcher.GetCaptureGroup(1);

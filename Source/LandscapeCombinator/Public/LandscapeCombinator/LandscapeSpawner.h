@@ -20,7 +20,7 @@ enum class EHeightMapSourceKind : uint8
 	Viewfinder15,
 	Viewfinder3,
 	Viewfinder1,
-	SwissALTI3D,
+	SwissALTI_3D,
 	USGS_OneThird,
 	RGEALTI,
 	LocalFile,
@@ -122,7 +122,7 @@ public:
 
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::SwissALTI3D", EditConditionHides, DisplayPriority = "3")
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::SwissALTI_3D", EditConditionHides, DisplayPriority = "3")
 	)
 	/* Enter C:\Path\To\ListOfLinks.csv (see README for more details) */
 	FString SwissALTI3DListOfLinks;
@@ -137,7 +137,7 @@ public:
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::USGS_OneThird", EditConditionHides, DisplayPriority = "3")
 	)
 	/* Enter C:\Path\To\ListOfLinks.txt (see README for more details) */
-	FString USGSOneThirdListOfLinks;
+	FString USGS_OneThirdListOfLinks;
 	
 
 	
@@ -176,7 +176,7 @@ public:
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Litto3D_Guadeloupe", EditConditionHides, DisplayPriority = "4")
 	)
-	/* Tick this if the files have already been extracted once. Keep it unticked if unsure. */
+	/* Tick this if the files have already been extracted once. Keep it checked if unsure. */
 	bool bSkipExtraction = false;
 
 
@@ -286,19 +286,20 @@ public:
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|General",
 		meta = (DisplayPriority = "2")
 	)
-	/* If this is ticked, then the LevelCoordinates world origin will be set to the center of this landscape.
-	 * WARNING: If you have more than one landscape, you must use this option only on one landscape,
-	 * otherwise each landscape will be aligned with (0, 0), instead of being well aligned with respect to the other landscapes. */
-	bool bSetLevelCoordinatesWorldOrigin = true;
+	/* When the landscape components do not exactly match with the total size of the heightmaps,
+	 * Unreal Engine adds some padding at the border. Check this option if you are willing to
+	 * drop some data at the border in order to make your heightmaps exactly match the landscape
+	 * components. */
+	bool bDropData = true;
 
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|General",
 		meta = (DisplayPriority = "3")
 	)
-	/* If this is ticked, then the LevelCoordinates EPSG will be set to this heightmap EPSG coordinate system.
+	/* If this is checked, then the LevelCoordinates world origin and EPSG will be set to the center of this landscape.
 	 * WARNING: If you have more than one landscape, you must use this option only on one landscape,
 	 * otherwise each landscape will be aligned with (0, 0), instead of being well aligned with respect to the other landscapes. */
-	bool bSetLevelCoordinatesEPSG = true;
+	bool bSetLevelCoordinatesWorldOrigin = true;
 
 
 
@@ -326,9 +327,9 @@ public:
 
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Reprojection",
-		meta = (EditCondition = "!bSetLevelCoordinatesEPSG", EditConditionHides, DisplayPriority = "30")
+		meta = (EditCondition = "!bSetLevelCoordinatesWorldOrigin", EditConditionHides, DisplayPriority = "30")
 	)
-	/* Keep this ticked if the coordinate system of the heightmap data is different than the coordinate system of your level (LevelCoordinates).
+	/* Keep this checked if the coordinate system of the heightmap data is different than the coordinate system of your level (LevelCoordinates).
 	 * This triggers a reprojection of your heightmap data in the level coordinate system. */
 	bool bRequiresReprojection = true;
 

@@ -340,20 +340,22 @@ bool GDALInterface::Merge(TArray<FString> SourceFiles, FString& TargetFile)
 		papszSrcDSNames = CSLAddString(papszSrcDSNames, TCHAR_TO_UTF8(*SourceFiles[i]));
 	}
 
+	int pbUsageError;
 	GDALDatasetH DatasetVRT = GDALBuildVRT(
 		TCHAR_TO_UTF8(*TargetFile),
 		SourceFiles.Num(),
 		NULL,
 		papszSrcDSNames,
 		NULL,
-		NULL
+		&pbUsageError
 	);
 	
 	if (!DatasetVRT)
 	{
 		FMessageDialog::Open(EAppMsgType::Ok, FText::Format(
-			LOCTEXT("GDALInterfaceMergeError", "Could not merge the files {0}."),
-			FText::FromString(FString::Join(SourceFiles, TEXT(", ")))
+			LOCTEXT("GDALInterfaceMergeError", "Could not merge the files {0}.\nError {1}."),
+			FText::FromString(FString::Join(SourceFiles, TEXT(", "))),
+			FText::AsNumber(pbUsageError)
 		));
 		return false;
 	}

@@ -9,6 +9,8 @@
 
 void HMTilesRenamer::Fetch(int InputEPSG, TArray<FString> InputFiles, TFunction<void(bool)> OnComplete)
 {
+	OutputEPSG = InputEPSG;
+
 	if (InputFiles.Num() == 1)
 	{
 		OutputFiles.Add(InputFiles[0]);

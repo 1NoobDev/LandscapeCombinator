@@ -4,7 +4,6 @@
 #include "LandscapeCombinator/Directories.h"
 #include "LandscapeCombinator/LogLandscapeCombinator.h"
 #include "GDALInterface/GDALInterface.h"
-#include "ConcurrencyHelpers/Concurrency.h"
 
 #include "Misc/ScopedSlowTask.h"
 

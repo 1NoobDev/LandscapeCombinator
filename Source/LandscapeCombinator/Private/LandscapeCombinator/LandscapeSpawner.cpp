@@ -8,7 +8,6 @@
 #include "LandscapeCombinator/HMLocalFile.h"
 #include "LandscapeCombinator/HMLocalFolder.h"
 #include "LandscapeCombinator/HMURL.h"
-#include "LandscapeCombinator/HMSetEPSG.h"
 
 #include "LandscapeCombinator/HMRGEALTI.h"
 #include "LandscapeCombinator/HMSwissALTI3DRenamer.h"
@@ -24,6 +23,8 @@
 #include "LandscapeCombinator/HMResolution.h"
 #include "LandscapeCombinator/HMReproject.h"
 #include "LandscapeCombinator/HMToPNG.h"
+#include "LandscapeCombinator/HMSetEPSG.h"
+#include "LandscapeCombinator/HMConvert.h"
 #include "LandscapeCombinator/HMAddMissingTiles.h"
 #include "LandscapeCombinator/HMListDownloader.h"
 
@@ -89,18 +90,20 @@ HMFetcher* ALandscapeSpawner::CreateInitialFetcher()
 		case EHeightMapSourceKind::Viewfinder3:
 		{
 			HMFetcher *Fetcher1 = new HMDebugFetcher("ViewfinderDownloader", new HMViewfinderDownloader(Viewfinder3_TilesString, "http://viewfinderpanoramas.org/dem3/", false), true);
-			HMFetcher *Fetcher2 = new HMDebugFetcher("Viewfinder1or3Renamer", new HMDegreeRenamer(LandscapeLabel));
-			return Fetcher1->AndThen(Fetcher2);
+			HMFetcher *Fetcher2 = new HMDebugFetcher("Convert", new HMConvert(LandscapeLabel, "tif"));
+			HMFetcher *Fetcher3 = new HMDebugFetcher("Viewfinder1or3Renamer", new HMDegreeRenamer(LandscapeLabel));
+			return Fetcher1->AndThen(Fetcher2)->AndThen(Fetcher3);
 		}
 
 		case EHeightMapSourceKind::Viewfinder1:
 		{
 			HMFetcher *Fetcher1 = new HMDebugFetcher("ViewfinderDownloader", new HMViewfinderDownloader(Viewfinder1_TilesString, "http://viewfinderpanoramas.org/dem1/", false), true);
-			HMFetcher *Fetcher2 = new HMDebugFetcher("Viewfinder1or3Renamer", new HMDegreeRenamer(LandscapeLabel));
-			return Fetcher1->AndThen(Fetcher2);
+			HMFetcher *Fetcher2 = new HMDebugFetcher("Convert", new HMConvert(LandscapeLabel, "tif"));
+			HMFetcher *Fetcher3 = new HMDebugFetcher("Viewfinder1or3Renamer", new HMDegreeRenamer(LandscapeLabel));
+			return Fetcher1->AndThen(Fetcher2)->AndThen(Fetcher3);
 		}
 
-		case EHeightMapSourceKind::SwissALTI3D:
+		case EHeightMapSourceKind::SwissALTI_3D:
 		{
 			HMFetcher *Fetcher1 = new HMDebugFetcher("ListDownloader", new HMListDownloader(SwissALTI3DListOfLinks), true);
 			HMFetcher *Fetcher2 = new HMDebugFetcher("SetEPSG", new HMSetEPSG());
@@ -110,7 +113,7 @@ HMFetcher* ALandscapeSpawner::CreateInitialFetcher()
 
 		case EHeightMapSourceKind::USGS_OneThird:
 		{
-			HMFetcher *Fetcher1 = new HMDebugFetcher("ListDownloader", new HMListDownloader(USGSOneThirdListOfLinks), true);
+			HMFetcher *Fetcher1 = new HMDebugFetcher("ListDownloader", new HMListDownloader(USGS_OneThirdListOfLinks), true);
 			HMFetcher *Fetcher2 = new HMDebugFetcher("SetEPSG", new HMSetEPSG());
 			HMFetcher *Fetcher3 = new HMDebugFetcher("DegreeRenamer", new HMDegreeRenamer(LandscapeLabel));
 			return Fetcher1->AndThen(Fetcher2)->AndThen(Fetcher3);
@@ -129,6 +132,8 @@ HMFetcher* ALandscapeSpawner::CreateInitialFetcher()
 
 HMFetcher* ALandscapeSpawner::CreateFetcher(HMFetcher *InitialFetcher)
 {
+	if (!InitialFetcher) return nullptr;
+
 	HMFetcher *Result = InitialFetcher;
 	
 	if (bPreprocess)
@@ -136,14 +141,12 @@ HMFetcher* ALandscapeSpawner::CreateFetcher(HMFetcher *InitialFetcher)
 		Result = Result->AndThen(new HMDebugFetcher("Preprocess", new HMPreprocess(LandscapeLabel, PreprocessingTool)));
 	}
 
-	if (bRequiresReprojection)
+	if (!bSetLevelCoordinatesWorldOrigin && bRequiresReprojection)
 	{
 		TObjectPtr<UGlobalCoordinates> GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(this->GetWorld());
 
-		if (!GlobalCoordinates)
-		{
-			return nullptr;
-		}
+		if (!GlobalCoordinates) return nullptr;
+
 		Result = Result->AndThen(new HMDebugFetcher("Reproject", new HMReproject(LandscapeLabel, GlobalCoordinates->EPSG)));
 	}
 
@@ -205,7 +208,7 @@ void ALandscapeSpawner::SpawnLandscape()
 	{			
 		FMessageDialog::Open(EAppMsgType::Ok,
 			FText::Format(
-				LOCTEXT("ErrorBound", "There was an error while creating heightmap files for Landscape {0}"),
+				LOCTEXT("ErrorBound", "There was an error while creating heightmap files for Landscape {0}."),
 				FText::FromString(LandscapeLabel)
 			)
 		); 
@@ -219,7 +222,7 @@ void ALandscapeSpawner::SpawnLandscape()
 		{	
 			if (bSuccess)
 			{
-				ALandscape *CreatedLandscape = LandscapeUtils::SpawnLandscape(Fetcher->OutputFiles, LandscapeLabel);
+				ALandscape *CreatedLandscape = LandscapeUtils::SpawnLandscape(Fetcher->OutputFiles, LandscapeLabel, bDropData);
 
 				if (CreatedLandscape)
 				{
@@ -230,7 +233,7 @@ void ALandscapeSpawner::SpawnLandscape()
 					{
 						FMessageDialog::Open(EAppMsgType::Ok,
 							FText::Format(
-								LOCTEXT("ErrorBound", "There was an internal error while getting coordinates for Landscape {0}"),
+								LOCTEXT("ErrorBound", "There was an internal error while getting coordinates for Landscape {0}."),
 								FText::FromString(LandscapeLabel)
 							)
 						);
@@ -249,7 +252,7 @@ void ALandscapeSpawner::SpawnLandscape()
 						{
 							FMessageDialog::Open(EAppMsgType::Ok,
 								FText::Format(
-									LOCTEXT("ErrorBound", "There was an internal error while setting Global Coordinates world origin from Landscape {0}"),
+									LOCTEXT("ErrorBound", "There was an internal error while setting Global Coordinates world origin from Landscape {0}."),
 									FText::FromString(LandscapeLabel)
 								)
 							);
@@ -263,22 +266,6 @@ void ALandscapeSpawner::SpawnLandscape()
 						double MaxCoordHeight = Coordinates[3];
 						GlobalCoordinates->WorldOriginLong = (MinCoordWidth + MaxCoordWidth) / 2;
 						GlobalCoordinates->WorldOriginLat = (MinCoordHeight + MaxCoordHeight) / 2;
-					}
-
-					if (bSetLevelCoordinatesEPSG)
-					{
-						if (!GlobalCoordinates)
-						{
-							FMessageDialog::Open(EAppMsgType::Ok,
-								FText::Format(
-									LOCTEXT("ErrorBound", "There was an internal error while setting Global Coordinates world origin from Landscape {0}"),
-									FText::FromString(LandscapeLabel)
-								)
-							);
-							// delete this; // FIXME: destroy Fetcher
-							return;
-						}
-
 						GlobalCoordinates->EPSG = Fetcher->OutputEPSG;
 					}
 

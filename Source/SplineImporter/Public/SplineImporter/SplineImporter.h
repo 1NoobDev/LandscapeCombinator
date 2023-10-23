@@ -93,6 +93,7 @@ public:
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Spline Importer",
 		meta = (DisplayPriority = "5")
 	)
+	/* Toggle linear splines for regular splines. (For landscape splines, you can manually set the tangent length to 0 in the Segments Connections). */
 	void ToggleLinear();
 
 private:

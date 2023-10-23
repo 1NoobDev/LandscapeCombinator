@@ -81,6 +81,8 @@ void HMAddMissingTiles::Fetch(int InputEPSG, TArray<FString> InputFiles, TFuncti
 
 				GDALRasterBand *Band = Dataset->GetRasterBand(1);
 				GUInt16 *Data = (GUInt16*) CPLMalloc(Pixels[0] * Pixels[1] * sizeof(GDT_UInt16));
+				memset(Data, 0, Pixels[0] * Pixels[1] * sizeof(GDT_UInt16));
+
 				Band->RasterIO(GF_Write, 0, 0, Pixels[0], Pixels[1], Data, Pixels[0], Pixels[1], GDT_UInt16, 0, 0);
 
 				GDALDataset *PNGDataset = PNGDriver->CreateCopy(TCHAR_TO_UTF8(*CurrentFile), Dataset, 1, nullptr, nullptr, nullptr);
