@@ -148,6 +148,8 @@ void UHeightmapModifier::BlendWithLandscape()
 					check(DistanceRatio >= 0);
 					check(DistanceRatio <= 1);
 					double Alpha = DegradeOtherData->GetFloatValue(DistanceRatio);
+					check(Alpha >= 0);
+					check(Alpha <= 1);
 					OtherNewHeightmapData[X + Y * OtherSizeX] = Alpha * OtherOldHeightmapData[X + Y * OtherSizeX] + (1 - Alpha) * OtherLandscapeNoData;
 				}
 				else
@@ -158,7 +160,7 @@ void UHeightmapModifier::BlendWithLandscape()
 			}
 		}
 		OtherHeightmapAccessor.SetData(OtherX1, OtherY1, OtherX2, OtherY2, OtherNewHeightmapData);
-		delete OtherNewHeightmapData;
+		free(OtherNewHeightmapData);
 
 		
 		/* Modify the data of this landscape */
@@ -199,9 +201,9 @@ void UHeightmapModifier::BlendWithLandscape()
 		}
 		HeightmapAccessor.SetData(0, 0, SizeX - 1, SizeY - 1, NewHeightmapData);
 
-		delete OldHeightmapData;
-		delete NewHeightmapData;
-		delete OtherOldHeightmapData;
+		free(OldHeightmapData);
+		free(NewHeightmapData);
+		free(OtherOldHeightmapData);
 
 		UE_LOG(LogHeightmapModifier, Log, TEXT("Finished blending with Landscape %s (MinX: %d, MaxX: %d, MinY: %d, MaxY: %d)"),
 			*LandscapeToBlendWith->GetActorLabel(), OtherX1, OtherX2, OtherY1, OtherY2
@@ -312,7 +314,7 @@ void UHeightmapModifier::ApplyToolToHeightmap()
 			FText::FromString(LandscapeLabel)
 		)); 
 
-		delete HeightmapData;
+		free(HeightmapData);
 		return;
 	}
 
@@ -331,7 +333,7 @@ void UHeightmapModifier::ApplyToolToHeightmap()
 			FText::FromString(TempDir)
 		));
 
-		delete HeightmapData;
+		free(HeightmapData);
 		return;
 	}
 
@@ -353,7 +355,7 @@ void UHeightmapModifier::ApplyToolToHeightmap()
 		FMessageDialog::Open(EAppMsgType::Ok,
 			LOCTEXT("UHeightmapModifier::ModifyHeightmap::3", "Could not load GDAL drivers.")
 		);
-		delete HeightmapData;
+		free(HeightmapData);
 		return;
 	}
 
@@ -374,7 +376,7 @@ void UHeightmapModifier::ApplyToolToHeightmap()
 			LOCTEXT("UHeightmapModifier::ModifyHeightmap::4", "There was an error while creating a GDAL Dataset."),
 			FText::FromString(InputFile)
 		));
-		delete HeightmapData;
+		free(HeightmapData);
 		return;
 	}
 
@@ -384,14 +386,14 @@ void UHeightmapModifier::ApplyToolToHeightmap()
 			LOCTEXT("UHeightmapModifier::ModifyHeightmap::4", "There was an error while writing heightmap data to file {0}."),
 			FText::FromString(InputFile)
 		));
-		delete HeightmapData;
+		free(HeightmapData);
 		GDALClose(Dataset);
 		return;
 	}
 
 
 	CPLErr WriteErr = Dataset->GetRasterBand(1)->RasterIO(GF_Write, 0, 0, SizeX, SizeY, HeightmapData, SizeX, SizeY, GDT_UInt16, 0, 0);
-	delete HeightmapData;
+	free(HeightmapData);
 
 	if (WriteErr != CE_None)
 	{
@@ -461,7 +463,7 @@ void UHeightmapModifier::ApplyToolToHeightmap()
 			LOCTEXT("UHeightmapModifier::ModifyHeightmap::7", "There was an error while reading heightmap data from file {0}."),
 			FText::FromString(OutputFile)
 		));
-		delete NewHeightmapData;
+		free(NewHeightmapData);
 		return;
 	}
 
@@ -486,13 +488,13 @@ void UHeightmapModifier::ApplyToolToHeightmap()
 			LOCTEXT("UHeightmapModifier::ModifyHeightmap::9", "Could not create landscape layer. Make sure that edit layers are enabled on Landscape {0}."),
 			FText::FromString(LandscapeLabel)
 		));
-		delete NewHeightmapData;
+		free(NewHeightmapData);
 		return;
 	}
 
 	HeightmapAccessor.SetEditLayer(Landscape->GetLayer(LayerIndex)->Guid);
 	HeightmapAccessor.SetData(X1, Y1, X2, Y2, NewHeightmapData);
-	delete NewHeightmapData;
+	free(NewHeightmapData);
 	
 	FMessageDialog::Open(EAppMsgType::Ok, FText::Format(
 		LOCTEXT("UHeightmapModifier::ModifyHeightmap::10", "Finished applying command {0} on the Landscape {1}."),
