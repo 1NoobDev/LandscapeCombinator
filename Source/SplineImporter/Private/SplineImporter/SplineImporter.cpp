@@ -8,6 +8,7 @@
 #include "Coordinates/LevelCoordinates.h"
 #include "GDALInterface/GDALInterface.h"
 
+
 #include "EditorSupportDelegates.h"
 #include "LandscapeStreamingProxy.h"
 #include "LandscapeSplineControlPoint.h" 
@@ -28,31 +29,6 @@ ASplineImporter::ASplineImporter()
 
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent")));
 	RootComponent->SetMobility(EComponentMobility::Static);
-}
-
-void ASplineImporter::ToggleLinear()
-{
-	for (auto& SplineComponent : SplineComponents)
-	{
-		if (IsValid(SplineComponent))
-		{
-			SplineComponent->Modify();
-		
-			auto &Points = SplineComponent->SplineCurves.Position.Points;
-
-			if (Points.IsEmpty()) continue;
-
-			TEnumAsByte<EInterpCurveMode> OldInterpMode = Points[0].InterpMode;
-			TEnumAsByte<EInterpCurveMode> NewInterpMode = OldInterpMode == CIM_CurveAuto ? CIM_Linear : CIM_CurveAuto;
-
-			for (FInterpCurvePoint<FVector> &Point : SplineComponent->SplineCurves.Position.Points)
-			{
-				Point.InterpMode = NewInterpMode;
-			}
-			SplineComponent->UpdateSpline();
-			SplineComponent->bSplineHasBeenEdited = true;
-		}
-	}
 }
 
 void ASplineImporter::GenerateSplines()
@@ -99,7 +75,6 @@ void ASplineImporter::GenerateSplines()
 		IntroMessage = FText::Format(
 			LOCTEXT("ASplineImporter::GenerateSplines::Intro2",
 				"Splines will now be added to {0}. You can monitor the progress in the Output Log. "
-				"After the splines are added, you may for instance add meshes to them to make roads. "
 				"For splines that represent buildings perimeters, you can use the plugin's class BuildingsFromSplines to create buildings automatically."
 			),
 			FText::FromString(ActorOrLandscapeToPlaceSplinesLabel)
@@ -457,16 +432,40 @@ void ASplineImporter::GenerateRegularSplines(
 	);
 	SplinesTask.MakeDialog();
 
-	for (auto &PointList : PointLists)
+	
+	UWorld *World = Actor->GetWorld();
+
+	if (!World)
 	{
-		AddRegularSpline(Actor, CollisionQueryParams, PointList);
+		FMessageDialog::Open(EAppMsgType::Ok,
+			LOCTEXT("NoWorld", "Internal error while creating splines: NULL World pointer.")
+		);
+		return;
 	}
 
+	ASplineCollection *SplineCollection = World->SpawnActor<ASplineCollection>();
+
+	if (!SplineCollection)
+	{
+		FMessageDialog::Open(EAppMsgType::Ok,
+			LOCTEXT("NoWorld", "Internal error while creating splines. Could not spawn a SplineCollection.")
+		);
+		return;
+	}
+
+	for (auto &PointList : PointLists)
+	{
+		AddRegularSpline(Actor, SplineCollection, CollisionQueryParams, PointList);
+	}
+	
+	GEditor->SelectActor(this, false, true);
+	GEditor->SelectActor(SplineCollection, true, true, true, true);
 	GEditor->NoteSelectionChange();
 }
 
 void ASplineImporter::AddRegularSpline(
 	AActor* Actor,
+	ASplineCollection* SplineCollection,
 	FCollisionQueryParams CollisionQueryParams,
 	TArray<OGRPoint> &PointList
 )
@@ -479,8 +478,8 @@ void ASplineImporter::AddRegularSpline(
 	OGRPoint First = PointList[0];
 	OGRPoint Last = PointList.Last();
 			
-	USplineComponent *SplineComponent = NewObject<USplineComponent>(this);
-	SplineComponents.Add(SplineComponent);
+	USplineComponent *SplineComponent = NewObject<USplineComponent>(SplineCollection);
+	SplineCollection->SplineComponents.Add(SplineComponent);
 	SplineComponent->RegisterComponent();
 	SplineComponent->ClearSplinePoints();
 	SplineComponent->SetMobility(EComponentMobility::Static);
@@ -514,11 +513,21 @@ void ASplineImporter::AddRegularSpline(
 	}
 
 	if (First == Last) SplineComponent->SetClosedLoop(true);
+		
+
+	if (SplinesSource == ESourceKind::Buildings)
+	{
+		auto &Points = SplineComponent->SplineCurves.Position.Points;
+		for (FInterpCurvePoint<FVector> &Point : SplineComponent->SplineCurves.Position.Points)
+		{
+			Point.InterpMode = CIM_Linear;
+		}
+	}
 
 	SplineComponent->UpdateSpline();
 	SplineComponent->bSplineHasBeenEdited = true;
 
-	this->AddInstanceComponent(SplineComponent);
+	SplineCollection->AddInstanceComponent(SplineComponent);
 	SplineComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
 }
 

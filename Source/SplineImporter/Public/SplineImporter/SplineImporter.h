@@ -3,6 +3,7 @@
 #pragma once
 
 #include "LogSplineImporter.h"
+#include "SplineImporter/SplineCollection.h"
 
 #include "Landscape.h"
 #include "Components/SplineComponent.h" 
@@ -10,9 +11,6 @@
 #pragma warning(disable: 4668)
 #include "gdal.h"
 #include "gdal_priv.h"
-#include "gdal_utils.h"
-#include <ogr_api.h>
-#include <ogrsf_frmts.h>
 #pragma warning(default: 4668)
 
 #include "SplineImporter.generated.h"
@@ -44,12 +42,19 @@ public:
 	TEnumAsByte<ESourceKind> SplinesSource = ESourceKind::Roads;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
-		meta = (DisplayPriority = "-5")
+		meta = (EditCondition = "SplinesSource == ESourceKind::LocalFile", EditConditionHides, DisplayPriority = "-1")
 	)
-	/* Check this only if `ActorToPlaceSplines` is a landscape and if you want to use landscape splines instead of normal spline components.
-	 * For roads, it is recommended you use landscape splines (checked).
-	 * For buildings, it is recommended you use normal spline components (unchecked). */
-	bool bUseLandscapeSplines = false;
+	FString LocalFile;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
+		meta = (EditCondition = "SplinesSource == ESourceKind::OverpassQuery", EditConditionHides, DisplayPriority = "-1")
+	)
+	FString OverpassQuery;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
+		meta = (EditCondition = "SplinesSource == ESourceKind::OverpassShortQuery", EditConditionHides, DisplayPriority = "-1")
+	)
+	FString OverpassShortQuery;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
 		meta = (DisplayPriority = "0")
@@ -63,12 +68,6 @@ public:
 	)
 	bool bRestrictArea = false;
 
-	/* Increasing this value (before generating splines) makes your landscape splines less curvy. This does not apply to regular splines. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
-		meta = (EditCondition = "bUseLandscapeSplines", EditConditionHides, DisplayPriority = "1")
-	)
-	double LandscapeSplinesStraightness = 1;
-
 	/* Use a cube or another rectangular actor to specify the area on which you want to import splines.
 	 * Splines will be imported on `ActorToPlaceSplines`. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
@@ -77,35 +76,25 @@ public:
 	AActor *BoundingActor = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
-		meta = (EditCondition = "SplinesSource == ESourceKind::LocalFile", EditConditionHides, DisplayPriority = "3")
+		meta = (DisplayPriority = "3")
 	)
-	FString LocalFile;
+	/* Check this only if `ActorToPlaceSplines` is a landscape and if you want to use landscape splines instead of normal spline components.
+	 * For roads, it is recommended you use landscape splines (checked).
+	 * For buildings, it is recommended you use normal spline components (unchecked). */
+	bool bUseLandscapeSplines = false;
 
+	/* Increasing this value (before generating splines) makes your landscape splines less curvy. This does not apply to regular splines. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
-		meta = (EditCondition = "SplinesSource == ESourceKind::OverpassQuery", EditConditionHides, DisplayPriority = "3")
+		meta = (EditCondition = "bUseLandscapeSplines", EditConditionHides, DisplayPriority = "4")
 	)
-	FString OverpassQuery;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline Importer",
-		meta = (EditCondition = "SplinesSource == ESourceKind::OverpassShortQuery", EditConditionHides, DisplayPriority = "3")
-	)
-	FString OverpassShortQuery;
+	double LandscapeSplinesStraightness = 1;
 
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Spline Importer",
 		meta = (DisplayPriority = "4")
 	)
 	void GenerateSplines();
-	
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Spline Importer",
-		meta = (DisplayPriority = "5")
-	)
-	/* Toggle linear splines for regular splines. (For landscape splines, you can manually set the tangent length to 0 in the Segments Connections). */
-	void ToggleLinear();
 
 private:
-	UPROPERTY()
-	TArray<TObjectPtr<USplineComponent>> SplineComponents;
-
 	GDALDataset* LoadGDALDatasetFromFile(FString File);
 	void LoadGDALDataset(TFunction<void(GDALDataset*)> OnComplete);
 	void LoadGDALDatasetFromQuery(FString Query, TFunction<void(GDALDataset*)> OnComplete);
@@ -141,6 +130,7 @@ private:
 
 	void AddRegularSpline(
 		AActor* Actor,
+		ASplineCollection* SplineCollection,
 		FCollisionQueryParams CollisionQueryParams,
 		TArray<OGRPoint> &PointList
 	);

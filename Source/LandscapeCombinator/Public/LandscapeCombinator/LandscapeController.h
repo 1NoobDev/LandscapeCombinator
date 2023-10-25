@@ -13,6 +13,7 @@ class LANDSCAPECOMBINATOR_API ULandscapeController : public UActorComponent
 
 public:
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "LandscapeCombinator")
+	/* Adjust the landscape scale and position to respect the `LevelCoordinates` and the `ZScale`. */
 	void AdjustLandscape();
 
 	UPROPERTY(VisibleAnywhere, Category = "LandscapeCombinator|Information",

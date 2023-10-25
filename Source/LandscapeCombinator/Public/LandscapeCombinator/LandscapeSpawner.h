@@ -22,30 +22,11 @@ enum class EHeightMapSourceKind : uint8
 	Viewfinder1,
 	SwissALTI_3D,
 	USGS_OneThird,
-	RGEALTI,
+	RGE_ALTI,
 	LocalFile,
 	LocalFolder,
 	Litto3D_Guadeloupe,
 	URL
-};
-
-UENUM(BlueprintType)
-enum class EPresetHeightmap : uint8
-{
-	/* Viewfinder Panoramas 15, 15-A, 15-B, 15-C, 15-D, 15-E, 15-F, 15-G, 15-H, 15-I, 15-J, 15-K, 15-L, 15-M, 15-N, 15-O, 15-P, 15-Q, 15-R, 15-S, 15-T, 15-U, 15-V, 15-W, 15-X */
-	WholeWorld,
-	
-	/* Viewfinder Panoramas 3, M30, M31, M32, L30, L31, L32, K30, K31, K32 */
-	France,
-
-	/* Viewfinder Panoramas 3, SF40 */
-	Reunion,
-
-	/* RGE ALTI, 503200, 569700, 6183000, 6227000, 4300, 4300 */
-	PyreneesAriege,
-
-	/* RGE ALTI, 988387, 990239, 6469448, 6470383 */
-	PointeEchelle,
 };
 
 UCLASS(BlueprintType)
@@ -55,13 +36,6 @@ class LANDSCAPECOMBINATOR_API ALandscapeSpawner : public AActor
 
 public:
 	ALandscapeSpawner();
-	
-	// FIXME: add presets
-	//UPROPERTY(
-	//	EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-	//	meta = (DisplayPriority = "-10")
-	//)
-	//EPresetHeightmap PresetHeightmap;
 
 		/***********************
 	  *  Heightmap Source  *
@@ -95,7 +69,7 @@ public:
 		VisibleAnywhere, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Viewfinder3", EditConditionHides, DisplayPriority = "3")
 	)
-	FString Viewfinder3_Help = "Enter the comma-separated list of rectangles (e.g. M31, M32) from http://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org3.htm";
+	FString Viewfinder3_Help = "Enter the comma-separated list of rectangles (e.g. L31, L32) from http://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org3.htm";
 		
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
@@ -107,7 +81,7 @@ public:
 		VisibleAnywhere, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1", EditConditionHides, DisplayPriority = "3")
 	)
-	FString Viewfinder1_Help = "Enter the comma-separated list of rectangles (e.g. M31, M32) from http://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org1.htm";
+	FString Viewfinder1_Help = "Enter the comma-separated list of rectangles (e.g. L31, L32) from http://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org1.htm";
 		
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
@@ -121,11 +95,19 @@ public:
 	  *****************/
 
 	UPROPERTY(
-		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
+		VisibleAnywhere, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::SwissALTI_3D", EditConditionHides, DisplayPriority = "3")
 	)
-	/* Enter C:\Path\To\ListOfLinks.csv (see README for more details) */
-	FString SwissALTI3DListOfLinks;
+	FString SwissALTI3D_Help =
+		"Download a CSV file from: https://www.swisstopo.admin.ch/fr/geodata/height/alti3d.html"
+		"Then, enter the path on your computer to the CSV file below.";
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::SwissALTI_3D", EditConditionHides, DisplayPriority = "4")
+	)
+	/* Enter C:\Path\To\ListOfLinks.csv (see documentation for more details) */
+	FString SwissALTI3D_ListOfLinks;
 
 	
 	/*********************
@@ -133,11 +115,20 @@ public:
 	  ********************/
 
 	UPROPERTY(
-		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
+		VisibleAnywhere, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::USGS_OneThird", EditConditionHides, DisplayPriority = "3")
 	)
-	/* Enter C:\Path\To\ListOfLinks.txt (see README for more details) */
-	FString USGS_OneThirdListOfLinks;
+	FString USGS_OneThird_Help =
+		"Download a TXT file from https://apps.nationalmap.gov/downloader/ with\n"
+		"Elevation Products (3DEP) > 1/3 arc second (DEM) > Current.\n"
+		"Then, enter the path on your computer to the TXT file below.";
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::USGS_OneThird", EditConditionHides, DisplayPriority = "4")
+	)
+	/* Enter C:\Path\To\ListOfLinks.txt (see the help above, or the documentation for more details) */
+	FString USGS_OneThird_ListOfLinks;
 	
 
 	
@@ -149,7 +140,7 @@ public:
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Folder", EditConditionHides, DisplayPriority = "3")
 	)
-	/* Enter C:\Path\To\Folder\ containing heightmaps correctly following the _x0_y0 convention */
+	/* Enter C:\Path\To\Folder\ containing heightmaps following the _x0_y0 convention */
 	FString Folder;
 
 	
@@ -169,14 +160,14 @@ public:
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Litto3D_Guadeloupe", EditConditionHides, DisplayPriority = "4")
 	)
-	/* Tick this if you prefer to use the less precise 5m data instead of 1m data */
+	/* Check this if you prefer to use the less precise 5m data instead of 1m data */
 	bool bUse5mData = false;
 
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Litto3D_Guadeloupe", EditConditionHides, DisplayPriority = "4")
 	)
-	/* Tick this if the files have already been extracted once. Keep it checked if unsure. */
+	/* Check this if the files have already been extracted once. Keep it checked if unsure. */
 	bool bSkipExtraction = false;
 
 
@@ -187,51 +178,51 @@ public:
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGEALTI", EditConditionHides, DisplayPriority = "3")
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "3")
 	)
 	/* Enter the minimum longitude of the bounding box in EPSG 2154 coordinates (left coordinate) */
 	double RGEALTIMinLong;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGEALTI", EditConditionHides, DisplayPriority = "4")
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "4")
 	)
 	/* Enter the maximum longitude of the bounding box in EPSG 2154 coordinates (right coordinate) */
 	double RGEALTIMaxLong;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGEALTI", EditConditionHides, DisplayPriority = "5")
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "5")
 	)
 	/* Enter the minimum latitude of the bounding box in EPSG 2154 coordinates (bottom coordinate) */
 	double RGEALTIMinLat;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGEALTI", EditConditionHides, DisplayPriority = "6")
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "6")
 	)
 	/* Enter the maximum latitude of the bounding box in EPSG 2154 coordinates (top coordinate) */
 	double RGEALTIMaxLat;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGEALTI", EditConditionHides, DisplayPriority = "7")
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "7")
 	)
 	/* When set to true, you can specify the width and height of the desired heightmap,
 	 * so that the RGE ALTI web API resizes your image before download.
-	 * Maximum size for this API is 10,000 pixels. */
+	 * Maximum size for this API is 10 000 pixels. */
 	bool bResizeRGEAltiUsingWebAPI;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGEALTI && bResizeRGEALTIUsingWebAPI", EditConditionHides, DisplayPriority = "8")
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI && bResizeRGEALTIUsingWebAPI", EditConditionHides, DisplayPriority = "8")
 	)
 	/* Enter desired width for the downloaded heightmap from RGE ALTI web API */
 	int RGEALTIWidth;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGEALTI && bResizeRGEALTIUsingWebAPI", EditConditionHides, DisplayPriority = "9")
+		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI && bResizeRGEALTIUsingWebAPI", EditConditionHides, DisplayPriority = "9")
 	)
 	/* Enter desired height for the downloaded heightmap from RGE ALTI web API */
 	int RGEALTIHeight;
@@ -267,7 +258,6 @@ public:
 	  * General Settings *
 	  ********************/	
 
-
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|General",
 		meta = (DisplayPriority = "0")
@@ -292,15 +282,6 @@ public:
 	 * components. */
 	bool bDropData = true;
 
-	UPROPERTY(
-		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|General",
-		meta = (DisplayPriority = "3")
-	)
-	/* If this is checked, then the LevelCoordinates world origin and EPSG will be set to the center of this landscape.
-	 * WARNING: If you have more than one landscape, you must use this option only on one landscape,
-	 * otherwise each landscape will be aligned with (0, 0), instead of being well aligned with respect to the other landscapes. */
-	bool bSetLevelCoordinatesWorldOrigin = true;
-
 
 
 	/*****************
@@ -311,7 +292,7 @@ public:
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Preprocessing",
 		meta = (DisplayPriority = "10")
 	)
-	/* Tick this if you want to run an external binary to prepare the heightmaps right after fetching them. */
+	/* Check this option if you want to run an external binary to prepare the heightmaps right after fetching them. */
 	bool bPreprocess = false;
 
 	UPROPERTY(
@@ -319,19 +300,6 @@ public:
 		meta = (EditCondition = "bPreprocess", EditConditionHides, DisplayPriority = "11")
 	)
 	TObjectPtr<UExternalTool> PreprocessingTool;
-
-
-	/****************
-	 * Reprojection *
-	 ****************/
-
-	UPROPERTY(
-		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Reprojection",
-		meta = (EditCondition = "!bSetLevelCoordinatesWorldOrigin", EditConditionHides, DisplayPriority = "30")
-	)
-	/* Keep this checked if the coordinate system of the heightmap data is different than the coordinate system of your level (LevelCoordinates).
-	 * This triggers a reprojection of your heightmap data in the level coordinate system. */
-	bool bRequiresReprojection = true;
 
 
 	/******************
@@ -342,7 +310,7 @@ public:
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|ConversionToPNG",
 		meta = (DisplayPriority = "30")
 	)
-	/* Untick this if your heightmaps are already in PNG format. */
+	/* Uncheck this if your heightmaps are already in PNG format. */
 	bool bConvertToPNG = true;
 
 
@@ -354,7 +322,7 @@ public:
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Resolution",
 		meta = (DisplayPriority = "20")
 	)
-	/* Tick this if you wish to scale up or down the resolution of your heightmaps. */
+	/* Check this if you wish to scale up or down the resolution of your heightmaps. */
 	bool bChangeResolution = false;
 
 	UPROPERTY(

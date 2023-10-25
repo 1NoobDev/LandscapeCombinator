@@ -75,9 +75,9 @@ HMFetcher* ALandscapeSpawner::CreateInitialFetcher()
 			return Fetcher1->AndThen(Fetcher2);
 		}
 
-		case EHeightMapSourceKind::RGEALTI:
+		case EHeightMapSourceKind::RGE_ALTI:
 		{
-			return new HMDebugFetcher("RGEALTI", HMRGEALTI::RGEALTI(LandscapeLabel, RGEALTIMinLong, RGEALTIMaxLong, RGEALTIMinLat, RGEALTIMaxLat, bResizeRGEAltiUsingWebAPI, RGEALTIWidth, RGEALTIHeight), true);
+			return new HMDebugFetcher("RGE_ALTI", HMRGEALTI::RGEALTI(LandscapeLabel, RGEALTIMinLong, RGEALTIMaxLong, RGEALTIMinLat, RGEALTIMaxLat, bResizeRGEAltiUsingWebAPI, RGEALTIWidth, RGEALTIHeight), true);
 		}
 
 		case EHeightMapSourceKind::Viewfinder15:
@@ -105,7 +105,7 @@ HMFetcher* ALandscapeSpawner::CreateInitialFetcher()
 
 		case EHeightMapSourceKind::SwissALTI_3D:
 		{
-			HMFetcher *Fetcher1 = new HMDebugFetcher("ListDownloader", new HMListDownloader(SwissALTI3DListOfLinks), true);
+			HMFetcher *Fetcher1 = new HMDebugFetcher("ListDownloader", new HMListDownloader(SwissALTI3D_ListOfLinks), true);
 			HMFetcher *Fetcher2 = new HMDebugFetcher("SetEPSG", new HMSetEPSG());
 			HMFetcher *Fetcher3 = new HMDebugFetcher("SwissALTI3DRenamer", new HMSwissALTI3DRenamer(LandscapeLabel));
 			return Fetcher1->AndThen(Fetcher2)->AndThen(Fetcher3);
@@ -113,7 +113,7 @@ HMFetcher* ALandscapeSpawner::CreateInitialFetcher()
 
 		case EHeightMapSourceKind::USGS_OneThird:
 		{
-			HMFetcher *Fetcher1 = new HMDebugFetcher("ListDownloader", new HMListDownloader(USGS_OneThirdListOfLinks), true);
+			HMFetcher *Fetcher1 = new HMDebugFetcher("ListDownloader", new HMListDownloader(USGS_OneThird_ListOfLinks), true);
 			HMFetcher *Fetcher2 = new HMDebugFetcher("SetEPSG", new HMSetEPSG());
 			HMFetcher *Fetcher3 = new HMDebugFetcher("DegreeRenamer", new HMDegreeRenamer(LandscapeLabel));
 			return Fetcher1->AndThen(Fetcher2)->AndThen(Fetcher3);
@@ -141,12 +141,10 @@ HMFetcher* ALandscapeSpawner::CreateFetcher(HMFetcher *InitialFetcher)
 		Result = Result->AndThen(new HMDebugFetcher("Preprocess", new HMPreprocess(LandscapeLabel, PreprocessingTool)));
 	}
 
-	if (!bSetLevelCoordinatesWorldOrigin && bRequiresReprojection)
+	TObjectPtr<UGlobalCoordinates> GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(this->GetWorld());
+
+	if (GlobalCoordinates)
 	{
-		TObjectPtr<UGlobalCoordinates> GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(this->GetWorld());
-
-		if (!GlobalCoordinates) return nullptr;
-
 		Result = Result->AndThen(new HMDebugFetcher("Reproject", new HMReproject(LandscapeLabel, GlobalCoordinates->EPSG)));
 	}
 
@@ -159,12 +157,6 @@ HMFetcher* ALandscapeSpawner::CreateFetcher(HMFetcher *InitialFetcher)
 	if (bConvertToPNG)
 	{
 		Result = Result->AndThen(new HMDebugFetcher("ToPNG", new HMToPNG(LandscapeLabel)));
-
-		// we apply the Viewfinder renamer after converting to PNG
-		//if (!bRequiresReprojection && (HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1 || HeightMapSourceKind == EHeightMapSourceKind::Viewfinder3))
-		//{
-		//	Result = Result->AndThen(new HMDebugFetcher("Viewfinder1or3Renamer", new HMDegreeRenamer(LandscapeLabel)));
-		//}
 
 		Result = Result->AndThen(new HMDebugFetcher("AddMissingTiles", new HMAddMissingTiles()));
 	}
@@ -198,6 +190,23 @@ bool GetPixels(FIntPoint& InsidePixels, TArray<FString> Files)
 	return true;
 }
 
+bool GetCmPerPixelForEPSG(int EPSG, int &CmPerPixel)
+{
+	if (EPSG == 4326 || EPSG == 4269)
+	{
+		CmPerPixel = 11111111;
+		return true;
+	}
+	else if (EPSG == 2154 || EPSG == 4559 || EPSG == 2056)
+	{
+		CmPerPixel = 100;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
 void ALandscapeSpawner::SpawnLandscape()
 {
@@ -242,13 +251,29 @@ void ALandscapeSpawner::SpawnLandscape()
 					}
 					
 					TObjectPtr<UGlobalCoordinates> GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(this->GetWorld());
-					if (bSetLevelCoordinatesWorldOrigin)
+
+					if (!GlobalCoordinates)
 					{
+						int CmPerPixel;
+						if (!GetCmPerPixelForEPSG(Fetcher->OutputEPSG, CmPerPixel))
+						{
+							FMessageDialog::Open(EAppMsgType::Ok,
+								FText::Format(
+									LOCTEXT("ErrorBound",
+										"Please create a LevelCoordinates actor with EPSG {0}, and set the scale that you wish here."
+										"Then, in the LandscapeController component of your landscape, click on the Adjust Landscape button."
+									),
+									FText::FromString(LandscapeLabel)
+								)
+							);
+							return;
+						}
+
+						ALevelCoordinates *LevelCoordinates = this->GetWorld()->SpawnActor<ALevelCoordinates>();
+						TObjectPtr<UGlobalCoordinates> NewGlobalCoordinates = LevelCoordinates->GlobalCoordinates;
+
 						FVector4d Coordinates;
-						if (
-							!GlobalCoordinates ||
-							!GDALInterface::ConvertCoordinates(OriginalCoordinates, Coordinates, InitialFetcher->OutputEPSG, GlobalCoordinates->EPSG)
-						)
+						if (!GDALInterface::ConvertCoordinates(OriginalCoordinates, Coordinates, InitialFetcher->OutputEPSG, GlobalCoordinates->EPSG))
 						{
 							FMessageDialog::Open(EAppMsgType::Ok,
 								FText::Format(
@@ -256,7 +281,6 @@ void ALandscapeSpawner::SpawnLandscape()
 									FText::FromString(LandscapeLabel)
 								)
 							);
-							// delete this; // FIXME: destroy Fetcher
 							return;
 						}
 
@@ -264,9 +288,11 @@ void ALandscapeSpawner::SpawnLandscape()
 						double MaxCoordWidth = Coordinates[1];
 						double MinCoordHeight = Coordinates[2];
 						double MaxCoordHeight = Coordinates[3];
-						GlobalCoordinates->WorldOriginLong = (MinCoordWidth + MaxCoordWidth) / 2;
-						GlobalCoordinates->WorldOriginLat = (MinCoordHeight + MaxCoordHeight) / 2;
-						GlobalCoordinates->EPSG = Fetcher->OutputEPSG;
+						NewGlobalCoordinates->WorldOriginLong = (MinCoordWidth + MaxCoordWidth) / 2;
+						NewGlobalCoordinates->WorldOriginLat = (MinCoordHeight + MaxCoordHeight) / 2;
+						NewGlobalCoordinates->EPSG = Fetcher->OutputEPSG;
+						NewGlobalCoordinates->CmPerLongUnit = CmPerPixel;
+						NewGlobalCoordinates->CmPerLatUnit = -CmPerPixel;
 					}
 
 					ULandscapeController *LandscapeController = NewObject<ULandscapeController>(CreatedLandscape->GetRootComponent());

@@ -11,6 +11,13 @@
 
 void HMReproject::Fetch(int InputEPSG, TArray<FString> InputFiles, TFunction<void(bool)> OnComplete)
 {
+	if (OutputEPSG == InputEPSG)
+	{
+		// no reprojection needed in this case
+		OutputFiles.Append(InputFiles);
+		if (OnComplete) OnComplete(true);
+	}
+
 	FString ReprojectedFolder = FPaths::Combine(
 		Directories::LandscapeCombinatorDir(),
 		LandscapeLabel + "-" + FString::FromInt(OutputEPSG)
