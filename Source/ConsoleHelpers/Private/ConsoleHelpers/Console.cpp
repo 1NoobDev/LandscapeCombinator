@@ -3,6 +3,7 @@
 #include "ConsoleHelpers/Console.h"
 #include "ConsoleHelpers/LogConsoleHelpers.h"
 
+#include "Misc/MessageDialog.h" 
 #include "GenericPlatform/GenericPlatformProcess.h" 
 
 #define LOCTEXT_NAMESPACE "FConsoleHelpersModule"

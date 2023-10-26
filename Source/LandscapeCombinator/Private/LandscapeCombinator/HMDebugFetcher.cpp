@@ -3,6 +3,8 @@
 #include "LandscapeCombinator/HMDebugFetcher.h"
 #include "LandscapeCombinator/LogLandscapeCombinator.h"
 
+#include "Async/Async.h"
+
 #define LOCTEXT_NAMESPACE "FLandscapeCombinatorModule"
 
 void HMDebugFetcher::Fetch(int InputEPSG, TArray<FString> InputFiles, TFunction<void(bool)> OnComplete)

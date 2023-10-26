@@ -6,6 +6,7 @@ public class ConsoleHelpers : ModuleRules
 {
 	public ConsoleHelpers(ReadOnlyTargetRules Target) : base(Target)
 	{
+		CppStandard = CppStandardVersion.Cpp20;
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		// Unreal Dependencies

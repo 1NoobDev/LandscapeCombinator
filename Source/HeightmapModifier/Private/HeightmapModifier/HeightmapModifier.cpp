@@ -3,6 +3,7 @@
 #include "HeightmapModifier/HeightmapModifier.h"
 #include "HeightmapModifier/LogHeightmapModifier.h"
 
+
 #include "LandscapeUtils/LandscapeUtils.h"
 #include "GDALInterface/GDALInterface.h"
 
@@ -11,7 +12,7 @@
 #include "LandscapeEdit.h"
 #include "LandscapeDataAccess.h"
 #include "Curves/RichCurve.h"
-
+#include "Runtime/Launch/Resources/Version.h"
 
 
 #define LOCTEXT_NAMESPACE "FHeightmapModifierModule"
@@ -269,8 +270,9 @@ void UHeightmapModifier::ApplyToolToHeightmap()
 	}
 
 
-	/* Write difference data to a new edit layer. */
-
+	/* Write difference data to a new edit layer (>= 5.3 only). */
+	
+#if ENGINE_MAJOR_VERSION > 5 || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 3)
 	int LayerIndex = Landscape->CreateLayer();
 	if (LayerIndex == INDEX_NONE)
 	{
@@ -283,6 +285,8 @@ void UHeightmapModifier::ApplyToolToHeightmap()
 	}
 
 	HeightmapAccessor.SetEditLayer(Landscape->GetLayer(LayerIndex)->Guid);
+#endif
+
 	HeightmapAccessor.SetData(X1, Y1, X2, Y2, NewHeightmapData);
 	free(NewHeightmapData);
 	

@@ -6,6 +6,7 @@ public class LandscapeUtils : ModuleRules
 {
 	public LandscapeUtils(ReadOnlyTargetRules Target) : base(Target)
 	{
+		CppStandard = CppStandardVersion.Cpp20;
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		// Unreal Dependencies

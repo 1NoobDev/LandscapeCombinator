@@ -8,6 +8,7 @@
 #include "GDALInterface/GDALInterface.h"
 
 #include "HAL/FileManagerGeneric.h"
+#include "Internationalization/Regex.h"
 
 #define LOCTEXT_NAMESPACE "FLandscapeCombinatorModule"
 

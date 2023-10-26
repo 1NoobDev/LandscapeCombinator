@@ -9,6 +9,7 @@ public class LandscapeCombinator : ModuleRules
 {
 	public LandscapeCombinator(ReadOnlyTargetRules Target) : base(Target)
 	{
+		CppStandard = CppStandardVersion.Cpp20;
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		// GDAL

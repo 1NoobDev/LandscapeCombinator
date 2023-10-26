@@ -6,6 +6,7 @@ public class HeightmapModifier : ModuleRules
 {
 	public HeightmapModifier(ReadOnlyTargetRules Target) : base(Target)
 	{
+		CppStandard = CppStandardVersion.Cpp20;
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		// Unreal Dependencies

@@ -7,6 +7,7 @@ public class BuildingFromSpline : ModuleRules
 {
 	public BuildingFromSpline(ReadOnlyTargetRules Target) : base(Target)
 	{
+		CppStandard = CppStandardVersion.Cpp20;
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		// Unreal Dependencies
@@ -15,7 +16,7 @@ public class BuildingFromSpline : ModuleRules
 			{
 				"Core",
 			}
-			);
+		);
 			
 		
 		PrivateDependencyModuleNames.AddRange(
@@ -33,6 +34,6 @@ public class BuildingFromSpline : ModuleRules
 				"GeometryScriptingCore",
 				"GeometryScriptingEditor"
 			}
-			);
+		);
 	}
 }

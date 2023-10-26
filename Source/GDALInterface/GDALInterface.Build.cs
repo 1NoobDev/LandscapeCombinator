@@ -7,6 +7,7 @@ public class GDALInterface : ModuleRules
 {
 	public GDALInterface(ReadOnlyTargetRules Target) : base(Target)
 	{
+		CppStandard = CppStandardVersion.Cpp20;
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		// GDAL
