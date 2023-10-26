@@ -159,10 +159,9 @@ void ASplineImporter::LoadGDALDatasetFromShortQuery(FString ShortQuery, TFunctio
 	UE_LOG(LogSplineImporter, Log, TEXT("Adding roads with short Overpass query: '%s'"), *ShortQuery);
 	
 	FVector4d Coordinates;
-	if (!ActorOrLandscapeToPlaceSplines->IsA<ALandscape>())
+	if (bRestrictArea)
 	{
-		AActor *Actor = bRestrictArea ? BoundingActor : ActorOrLandscapeToPlaceSplines;
-		if (!Actor)
+		if (!BoundingActor)
 		{
 			FMessageDialog::Open(EAppMsgType::Ok,
 				LOCTEXT("LoadGDALDatasetFromShortQuery", "Please set BoundingActor to a valid actor, or untick the RestrictArea option")
@@ -171,8 +170,21 @@ void ASplineImporter::LoadGDALDatasetFromShortQuery(FString ShortQuery, TFunctio
 			return;
 		}
 		FVector Origin, BoxExtent;
-		Actor->GetActorBounds(true, Origin, BoxExtent);
-		if (!ALevelCoordinates::GetEPSGCoordinatesFromOriginExtent(Actor->GetWorld(), Origin, BoxExtent, 4326, Coordinates))
+		BoundingActor->GetActorBounds(true, Origin, BoxExtent);
+		if (!ALevelCoordinates::GetEPSGCoordinatesFromOriginExtent(BoundingActor->GetWorld(), Origin, BoxExtent, 4326, Coordinates))
+		{
+			FMessageDialog::Open(EAppMsgType::Ok,
+				LOCTEXT("LoadGDALDatasetFromShortQuery2", "Internal error while reading coordinates. Make sure that your level coordinates are valid.")
+			);
+			if (OnComplete) OnComplete(nullptr);
+			return;
+		}
+	}
+	else if (!ActorOrLandscapeToPlaceSplines->IsA<ALandscape>())
+	{
+		FVector Origin, BoxExtent;
+		ActorOrLandscapeToPlaceSplines->GetActorBounds(true, Origin, BoxExtent);
+		if (!ALevelCoordinates::GetEPSGCoordinatesFromOriginExtent(ActorOrLandscapeToPlaceSplines->GetWorld(), Origin, BoxExtent, 4326, Coordinates))
 		{
 			FMessageDialog::Open(EAppMsgType::Ok,
 				LOCTEXT("LoadGDALDatasetFromShortQuery2", "Internal error while reading coordinates. Make sure that your level coordinates are valid.")
@@ -334,6 +346,7 @@ void ASplineImporter::AddLandscapeSplinesPoints(
 )
 {
 	UWorld *World = Landscape->GetWorld();
+	FTransform WorldToComponent = LandscapeSplinesComponent->GetComponentToWorld().Inverse();
 
 	for (OGRPoint &Point : PointList)
 	{
@@ -355,7 +368,7 @@ void ASplineImporter::AddLandscapeSplinesPoints(
 		if (LandscapeUtils::GetZ(World, CollisionQueryParams, x, y, z))
 		{
 			FVector Location = { x, y, z };
-			FVector LocalLocation = LandscapeSplinesComponent->GetComponentToWorld().InverseTransformPosition(Location);
+			FVector LocalLocation = WorldToComponent.TransformPosition(Location);
 			ULandscapeSplineControlPoint* ControlPoint = NewObject<ULandscapeSplineControlPoint>(LandscapeSplinesComponent, NAME_None, RF_Transactional);
 			ControlPoint->Location = LocalLocation;
 			LandscapeSplinesComponent->GetControlPoints().Add(ControlPoint);
