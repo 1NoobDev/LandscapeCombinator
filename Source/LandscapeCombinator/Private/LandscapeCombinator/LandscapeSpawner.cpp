@@ -77,7 +77,8 @@ HMFetcher* ALandscapeSpawner::CreateInitialFetcher()
 
 		case EHeightMapSourceKind::RGE_ALTI:
 		{
-			return new HMDebugFetcher("RGE_ALTI", HMRGEALTI::RGEALTI(LandscapeLabel, RGEALTIMinLong, RGEALTIMaxLong, RGEALTIMinLat, RGEALTIMaxLat, bResizeRGEAltiUsingWebAPI, RGEALTIWidth, RGEALTIHeight), true);
+			HMFetcher *Fetcher1 = new HMDebugFetcher("RGE_ALTI", HMRGEALTI::RGEALTI(LandscapeLabel, RGEALTIMinLong, RGEALTIMaxLong, RGEALTIMinLat, RGEALTIMaxLat, bResizeRGEAltiUsingWebAPI, RGEALTIWidth, RGEALTIHeight), true);
+			return Fetcher1;
 		}
 
 		case EHeightMapSourceKind::Viewfinder15:
@@ -141,7 +142,7 @@ HMFetcher* ALandscapeSpawner::CreateFetcher(HMFetcher *InitialFetcher)
 		Result = Result->AndThen(new HMDebugFetcher("Preprocess", new HMPreprocess(LandscapeLabel, PreprocessingTool)));
 	}
 
-	TObjectPtr<UGlobalCoordinates> GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(this->GetWorld());
+	TObjectPtr<UGlobalCoordinates> GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(this->GetWorld(), false);
 
 	if (GlobalCoordinates)
 	{
@@ -154,12 +155,9 @@ HMFetcher* ALandscapeSpawner::CreateFetcher(HMFetcher *InitialFetcher)
 		}
 	);
 
-	if (bConvertToPNG)
-	{
-		Result = Result->AndThen(new HMDebugFetcher("ToPNG", new HMToPNG(LandscapeLabel)));
 
-		Result = Result->AndThen(new HMDebugFetcher("AddMissingTiles", new HMAddMissingTiles()));
-	}
+	Result = Result->AndThen(new HMDebugFetcher("ToPNG", new HMToPNG(LandscapeLabel)));
+	Result = Result->AndThen(new HMDebugFetcher("AddMissingTiles", new HMAddMissingTiles()));
 
 	if (bChangeResolution)
 	{
@@ -250,7 +248,7 @@ void ALandscapeSpawner::SpawnLandscape()
 						return;
 					}
 					
-					TObjectPtr<UGlobalCoordinates> GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(this->GetWorld());
+					TObjectPtr<UGlobalCoordinates> GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(this->GetWorld(), false);
 
 					if (!GlobalCoordinates)
 					{
@@ -263,7 +261,7 @@ void ALandscapeSpawner::SpawnLandscape()
 										"Please create a LevelCoordinates actor with EPSG {0}, and set the scale that you wish here."
 										"Then, in the LandscapeController component of your landscape, click on the Adjust Landscape button."
 									),
-									FText::FromString(LandscapeLabel)
+									FText::AsNumber(Fetcher->OutputEPSG)
 								)
 							);
 							return;
@@ -272,8 +270,12 @@ void ALandscapeSpawner::SpawnLandscape()
 						ALevelCoordinates *LevelCoordinates = this->GetWorld()->SpawnActor<ALevelCoordinates>();
 						TObjectPtr<UGlobalCoordinates> NewGlobalCoordinates = LevelCoordinates->GlobalCoordinates;
 
+						NewGlobalCoordinates->EPSG = Fetcher->OutputEPSG;
+						NewGlobalCoordinates->CmPerLongUnit = CmPerPixel;
+						NewGlobalCoordinates->CmPerLatUnit = -CmPerPixel;
+
 						FVector4d Coordinates;
-						if (!GDALInterface::ConvertCoordinates(OriginalCoordinates, Coordinates, InitialFetcher->OutputEPSG, GlobalCoordinates->EPSG))
+						if (!GDALInterface::ConvertCoordinates(OriginalCoordinates, Coordinates, InitialFetcher->OutputEPSG, NewGlobalCoordinates->EPSG))
 						{
 							FMessageDialog::Open(EAppMsgType::Ok,
 								FText::Format(
@@ -290,9 +292,6 @@ void ALandscapeSpawner::SpawnLandscape()
 						double MaxCoordHeight = Coordinates[3];
 						NewGlobalCoordinates->WorldOriginLong = (MinCoordWidth + MaxCoordWidth) / 2;
 						NewGlobalCoordinates->WorldOriginLat = (MinCoordHeight + MaxCoordHeight) / 2;
-						NewGlobalCoordinates->EPSG = Fetcher->OutputEPSG;
-						NewGlobalCoordinates->CmPerLongUnit = CmPerPixel;
-						NewGlobalCoordinates->CmPerLatUnit = -CmPerPixel;
 					}
 
 					ULandscapeController *LandscapeController = NewObject<ULandscapeController>(CreatedLandscape->GetRootComponent());

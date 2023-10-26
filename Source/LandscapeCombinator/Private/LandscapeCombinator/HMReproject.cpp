@@ -16,6 +16,7 @@ void HMReproject::Fetch(int InputEPSG, TArray<FString> InputFiles, TFunction<voi
 		// no reprojection needed in this case
 		OutputFiles.Append(InputFiles);
 		if (OnComplete) OnComplete(true);
+		return;
 	}
 
 	FString ReprojectedFolder = FPaths::Combine(

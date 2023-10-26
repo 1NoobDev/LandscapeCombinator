@@ -24,15 +24,17 @@ void HMSetEPSG::Fetch(int InputEPSG, TArray<FString> InputFiles, TFunction<void(
 		return;
 	}
 
+	OGRErr Err = InRs.AutoIdentifyEPSG();
 	FString Name = FString(InRs.GetAuthorityName(nullptr));
-	OutputEPSG = FCString::Atoi(ANSI_TO_TCHAR(InRs.GetAuthorityCode(nullptr)));
-
-	if (Name != "EPSG" || OutputEPSG == 0)
+	OutputEPSG = FCString::Atoi(*FString(InRs.GetAuthorityCode(nullptr)));
+	
+	if (Err != OGRERR_NONE || Name != "EPSG" || OutputEPSG == 0)
 	{
 		FMessageDialog::Open(EAppMsgType::Ok,
 			FText::Format(
-				LOCTEXT("HMSetEPSG::Fetch", "Could not read EPSG code from file {0}. Authority name and code are {1}:{2}"),
+				LOCTEXT("HMSetEPSG::Fetch", "Could not read EPSG code from file {0} (Error: {1}). Authority name and code are {2}:{3}"),
 				FText::FromString(InputFiles[0]),
+				FText::AsNumber(Err),
 				FText::FromString(Name),
 				FText::AsNumber(OutputEPSG)
 			)

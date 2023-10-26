@@ -19,7 +19,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Building")
 	TObjectPtr<UGlobalCoordinates> GlobalCoordinates;
 
-	static TObjectPtr<UGlobalCoordinates> GetGlobalCoordinates(UWorld *World);
+	static TObjectPtr<UGlobalCoordinates> GetGlobalCoordinates(UWorld *World, bool bShowDialog = true);
 
 	static bool GetUnrealCoordinatesFromEPSG(UWorld *World, double Longitude, double Latitude, int EPSG, FVector2D &OutXY);
 	static bool GetEPSGCoordinatesFromUnrealLocation(UWorld* World, FVector2D Location, int EPSG, FVector2D &OutCoordinates);

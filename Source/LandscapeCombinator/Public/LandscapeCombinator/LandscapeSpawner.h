@@ -181,28 +181,28 @@ public:
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "3")
 	)
 	/* Enter the minimum longitude of the bounding box in EPSG 2154 coordinates (left coordinate) */
-	double RGEALTIMinLong;
+	int RGEALTIMinLong;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "4")
 	)
 	/* Enter the maximum longitude of the bounding box in EPSG 2154 coordinates (right coordinate) */
-	double RGEALTIMaxLong;
+	int RGEALTIMaxLong;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "5")
 	)
 	/* Enter the minimum latitude of the bounding box in EPSG 2154 coordinates (bottom coordinate) */
-	double RGEALTIMinLat;
+	int RGEALTIMinLat;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "6")
 	)
 	/* Enter the maximum latitude of the bounding box in EPSG 2154 coordinates (top coordinate) */
-	double RGEALTIMaxLat;
+	int RGEALTIMaxLat;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
@@ -300,18 +300,6 @@ public:
 		meta = (EditCondition = "bPreprocess", EditConditionHides, DisplayPriority = "11")
 	)
 	TObjectPtr<UExternalTool> PreprocessingTool;
-
-
-	/******************
-	 * Convert To PNG *
-	 *****************/
-
-	UPROPERTY(
-		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|ConversionToPNG",
-		meta = (DisplayPriority = "30")
-	)
-	/* Uncheck this if your heightmaps are already in PNG format. */
-	bool bConvertToPNG = true;
 
 
 	/**************

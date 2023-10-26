@@ -13,7 +13,7 @@ ALevelCoordinates::ALevelCoordinates()
 	GlobalCoordinates = CreateDefaultSubobject<UGlobalCoordinates>(TEXT("Global Coordinates"));
 }
 
-TObjectPtr<UGlobalCoordinates> ALevelCoordinates::GetGlobalCoordinates(UWorld* World)
+TObjectPtr<UGlobalCoordinates> ALevelCoordinates::GetGlobalCoordinates(UWorld* World, bool bShowDialog)
 {
 	TArray<AActor*> LevelCoordinatesCandidates0;
 
@@ -23,17 +23,23 @@ TObjectPtr<UGlobalCoordinates> ALevelCoordinates::GetGlobalCoordinates(UWorld* W
 
 	if (LevelCoordinatesCandidates.Num() == 0)
 	{
-		FMessageDialog::Open(EAppMsgType::Ok,
-			LOCTEXT("NoLevelCoordinates", "Please add a visible (not Hidden in Game) LevelCoordinates actor to your level .")
-		);
+		if (bShowDialog)
+		{
+			FMessageDialog::Open(EAppMsgType::Ok,
+				LOCTEXT("NoLevelCoordinates", "Please add a visible (not Hidden in Game) LevelCoordinates actor to your level .")
+			);
+		}
 		return nullptr;
 	}
 
 	if (LevelCoordinatesCandidates.Num() > 1)
 	{
-		FMessageDialog::Open(EAppMsgType::Ok,
-			LOCTEXT("MoreThanOneLevelCoordinates", "You must have only one visible (not Hidden in Game) LevelCoordinates actor in your level.")
-		);
+		if (bShowDialog)
+		{
+			FMessageDialog::Open(EAppMsgType::Ok,
+				LOCTEXT("MoreThanOneLevelCoordinates", "You must have only one visible (not Hidden in Game) LevelCoordinates actor in your level.")
+			);
+		}
 		return nullptr;
 	}
 

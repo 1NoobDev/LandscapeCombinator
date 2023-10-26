@@ -298,6 +298,7 @@ void ASplineImporter::GenerateLandscapeSplines(
 
 	for (auto &PointList : PointLists)
 	{
+		PointsTask.EnterProgressFrame();
 		AddLandscapeSplinesPoints(Landscape, CollisionQueryParams, LandscapeSplinesComponent, PointList, Points);
 	}
 
@@ -313,6 +314,7 @@ void ASplineImporter::GenerateLandscapeSplines(
 	
 	for (auto &PointList : PointLists)
 	{
+		LandscapeSplinesTask.EnterProgressFrame();
 		AddLandscapeSplines(Landscape, CollisionQueryParams, LandscapeSplinesComponent, PointList, Points);
 	}
 	
@@ -423,16 +425,6 @@ void ASplineImporter::GenerateRegularSplines(
 	TArray<TArray<OGRPoint>> &PointLists
 )
 {
-	const int NumLists = PointLists.Num();
-	FScopedSlowTask SplinesTask = FScopedSlowTask(NumLists,
-		FText::Format(
-			LOCTEXT("PointsTask", "Adding landscape splines from {0} lines"),
-			FText::AsNumber(NumLists)
-		)
-	);
-	SplinesTask.MakeDialog();
-
-	
 	UWorld *World = Actor->GetWorld();
 
 	if (!World)
@@ -453,8 +445,18 @@ void ASplineImporter::GenerateRegularSplines(
 		return;
 	}
 
+	const int NumLists = PointLists.Num();
+	FScopedSlowTask SplinesTask = FScopedSlowTask(NumLists,
+		FText::Format(
+			LOCTEXT("PointsTask", "Adding splines from {0} lines"),
+			FText::AsNumber(NumLists)
+		)
+	);
+	SplinesTask.MakeDialog();
+
 	for (auto &PointList : PointLists)
 	{
+		SplinesTask.EnterProgressFrame();
 		AddRegularSpline(Actor, SplineCollection, CollisionQueryParams, PointList);
 	}
 	
