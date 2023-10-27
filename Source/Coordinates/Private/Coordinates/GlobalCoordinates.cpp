@@ -1,7 +1,6 @@
 // Copyright 2023 LandscapeCombinator. All Rights Reserved.
 
 #include "Coordinates/GlobalCoordinates.h"
-#include "GDALInterface/GDALInterface.h"
 
 #define LOCTEXT_NAMESPACE "FCoordinatesModule"
 
@@ -9,6 +8,20 @@ void UGlobalCoordinates::GetUnrealCoordinatesFromEPSG(double Longitude, double L
 {
 	XY[0] = (Longitude - WorldOriginLong) * CmPerLongUnit;
 	XY[1] = (Latitude - WorldOriginLat) * CmPerLatUnit;
+}
+
+OGRCoordinateTransformation* UGlobalCoordinates::GetEPSGTransformer(int FromEPSG)
+{
+	OGRSpatialReference InRs, OutRs;
+	if (
+		!GDALInterface::SetCRSFromEPSG(InRs, FromEPSG) ||
+		!GDALInterface::SetCRSFromEPSG(OutRs, EPSG)
+	)
+	{ 
+		return nullptr;
+	}
+	
+	return OGRCreateCoordinateTransformation(&InRs, &OutRs);
 }
 
 bool UGlobalCoordinates::GetUnrealCoordinatesFromEPSG(double Longitude, double Latitude, int FromEPSG, FVector2D &XY)

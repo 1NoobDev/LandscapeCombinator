@@ -9,7 +9,7 @@
 
 #include "HeightmapModifier.generated.h"
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class HEIGHTMAPMODIFIER_API UHeightmapModifier : public UActorComponent
 {
 	GENERATED_BODY()

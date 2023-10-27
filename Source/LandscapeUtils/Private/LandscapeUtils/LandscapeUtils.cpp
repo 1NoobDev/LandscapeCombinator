@@ -19,7 +19,7 @@ ALandscape* LandscapeUtils::SpawnLandscape(TArray<FString> Heightmaps, FString L
 	if (Heightmaps.IsEmpty())
 	{
 		FMessageDialog::Open(EAppMsgType::Ok, FText::Format(
-			LOCTEXT("SpawnLandscapeError", "Internal Landscape Combinator error while spawning landscape {0}. No heightmap found."),
+			LOCTEXT("SpawnLandscapeError", "Landscape Combinator Error: Cannot spawn landscape {0} without heightmaps."),
 			FText::FromString(LandscapeLabel)
 		));
 		return NULL;
@@ -294,7 +294,6 @@ FCollisionQueryParams LandscapeUtils::CustomCollisionQueryParams(AActor *Actor)
 			}
 		}
 	}
-
 
 	return CollisionQueryParams;
 }

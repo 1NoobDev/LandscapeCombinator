@@ -78,6 +78,7 @@ void HMAddMissingTiles::Fetch(int InputEPSG, TArray<FString> InputFiles, TFuncti
 				{
 					UE_LOG(LogLandscapeCombinator, Log, TEXT("Could not create missing file %s"), *CurrentFile);
 					if (OnComplete) OnComplete(false);
+					return;
 				}
 
 				GDALRasterBand *Band = Dataset->GetRasterBand(1);
@@ -87,9 +88,16 @@ void HMAddMissingTiles::Fetch(int InputEPSG, TArray<FString> InputFiles, TFuncti
 				Band->RasterIO(GF_Write, 0, 0, Pixels[0], Pixels[1], Data, Pixels[0], Pixels[1], GDT_UInt16, 0, 0);
 
 				GDALDataset *PNGDataset = PNGDriver->CreateCopy(TCHAR_TO_UTF8(*CurrentFile), Dataset, 1, nullptr, nullptr, nullptr);
+				GDALClose(Dataset);
+
+				if (!PNGDataset)
+				{
+					UE_LOG(LogLandscapeCombinator, Log, TEXT("Could not create missing file %s"), *CurrentFile);
+					if (OnComplete) OnComplete(false);
+					return;
+				}
 				
 				GDALClose(PNGDataset);
-				GDALClose(Dataset);
 			}
 		}
 	}

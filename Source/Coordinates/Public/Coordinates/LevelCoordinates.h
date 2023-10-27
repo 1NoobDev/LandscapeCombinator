@@ -20,7 +20,8 @@ public:
 	TObjectPtr<UGlobalCoordinates> GlobalCoordinates;
 
 	static TObjectPtr<UGlobalCoordinates> GetGlobalCoordinates(UWorld *World, bool bShowDialog = true);
-
+	
+	static OGRCoordinateTransformation *GetEPSGTransformer(UWorld *World, int EPSG);
 	static bool GetUnrealCoordinatesFromEPSG(UWorld *World, double Longitude, double Latitude, int EPSG, FVector2D &OutXY);
 	static bool GetEPSGCoordinatesFromUnrealLocation(UWorld* World, FVector2D Location, int EPSG, FVector2D &OutCoordinates);
 	static bool GetEPSGCoordinatesFromUnrealLocations(UWorld* World, FVector4d Locations, int EPSG, FVector4d &OutCoordinates);

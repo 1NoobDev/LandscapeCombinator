@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LogConcurrencyHelpers.h"
 
 class CONCURRENCYHELPERS_API Concurrency
 {

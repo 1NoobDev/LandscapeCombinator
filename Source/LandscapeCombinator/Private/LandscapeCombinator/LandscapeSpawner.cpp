@@ -17,6 +17,7 @@
 #include "LandscapeCombinator/HMViewfinder15Downloader.h"
 #include "LandscapeCombinator/HMViewfinder15Renamer.h"
 #include "LandscapeCombinator/HMViewfinderDownloader.h"
+#include "LandscapeCombinator/HMDegreeFilter.h"
 
 #include "LandscapeCombinator/HMDebugFetcher.h"
 #include "LandscapeCombinator/HMPreprocess.h"
@@ -27,8 +28,10 @@
 #include "LandscapeCombinator/HMConvert.h"
 #include "LandscapeCombinator/HMAddMissingTiles.h"
 #include "LandscapeCombinator/HMListDownloader.h"
+#include "LandscapeCombinator/HMFunction.h"
 
 #include "HeightmapModifier/HeightmapModifier.h"
+#include "HeightmapModifier/BlendLandscape.h"
 #include "LandscapeUtils/LandscapeUtils.h"
 #include "Coordinates/LevelCoordinates.h"
 #include "GDALInterface/GDALInterface.h"
@@ -41,6 +44,11 @@ ALandscapeSpawner::ALandscapeSpawner()
 	PrimaryActorTick.bCanEverTick = false;
 
 	PreprocessingTool = CreateDefaultSubobject<UExternalTool>(TEXT("Preprocessing Tool"));
+}
+
+ALandscapeSpawner::~ALandscapeSpawner()
+{
+	MarkPendingKill();
 }
 
 HMFetcher* ALandscapeSpawner::CreateInitialFetcher()
@@ -77,31 +85,40 @@ HMFetcher* ALandscapeSpawner::CreateInitialFetcher()
 
 		case EHeightMapSourceKind::RGE_ALTI:
 		{
-			HMFetcher *Fetcher1 = new HMDebugFetcher("RGE_ALTI", HMRGEALTI::RGEALTI(LandscapeLabel, RGEALTIMinLong, RGEALTIMaxLong, RGEALTIMinLat, RGEALTIMaxLat, bResizeRGEAltiUsingWebAPI, RGEALTIWidth, RGEALTIHeight), true);
-			return Fetcher1;
+			HMFetcher *Fetcher1 = new HMDebugFetcher("RGE_ALTI", HMRGEALTI::RGEALTI(LandscapeLabel, RGEALTI_MinLong, RGEALTI_MaxLong, RGEALTI_MinLat, RGEALTI_MaxLat, bResizeRGEAltiUsingWebAPI, RGEALTIWidth, RGEALTIHeight), true);
+			HMFetcher *Fetcher2 = new HMDebugFetcher("RGE_ALTI_FixNoData", new HMFunction(LandscapeLabel, [](float x) { return x == -99999 ? 0 : x; }));
+			return Fetcher1->AndThen(Fetcher2);
 		}
 
 		case EHeightMapSourceKind::Viewfinder15:
 		{
-			HMFetcher *Fetcher1 = new HMDebugFetcher("ViewfinderDownloader", new HMViewfinderDownloader(Viewfinder15_TilesString, "http://www.viewfinderpanoramas.org/DEM/TIF15/", true), true);
+			HMFetcher *Fetcher1 = new HMDebugFetcher("ViewfinderDownloader", new HMViewfinderDownloader(Viewfinder_TilesString, "http://www.viewfinderpanoramas.org/DEM/TIF15/", true), true);
 			HMFetcher *Fetcher2 = new HMDebugFetcher("Viewfinder15Renamer", new HMViewfinder15Renamer(LandscapeLabel));
 			return Fetcher1->AndThen(Fetcher2);
 		}
 
 		case EHeightMapSourceKind::Viewfinder3:
 		{
-			HMFetcher *Fetcher1 = new HMDebugFetcher("ViewfinderDownloader", new HMViewfinderDownloader(Viewfinder3_TilesString, "http://viewfinderpanoramas.org/dem3/", false), true);
-			HMFetcher *Fetcher2 = new HMDebugFetcher("Convert", new HMConvert(LandscapeLabel, "tif"));
-			HMFetcher *Fetcher3 = new HMDebugFetcher("Viewfinder1or3Renamer", new HMDegreeRenamer(LandscapeLabel));
-			return Fetcher1->AndThen(Fetcher2)->AndThen(Fetcher3);
+			HMFetcher *Result = new HMDebugFetcher("ViewfinderDownloader", new HMViewfinderDownloader(Viewfinder_TilesString, "http://viewfinderpanoramas.org/dem3/", false), true);
+			if (bFilterDegrees)
+			{
+				Result = Result->AndThen(new HMDebugFetcher("DegreeFilter", new HMDegreeFilter(LandscapeLabel, FilterMinLong, FilterMaxLong, FilterMinLat, FilterMaxLat)));
+			}
+			Result = Result->AndThen(new HMDebugFetcher("Convert", new HMConvert(LandscapeLabel, "tif")));
+			Result = Result->AndThen(new HMDebugFetcher("DegreeRenamer", new HMDegreeRenamer(LandscapeLabel)));
+			return Result;
 		}
 
 		case EHeightMapSourceKind::Viewfinder1:
 		{
-			HMFetcher *Fetcher1 = new HMDebugFetcher("ViewfinderDownloader", new HMViewfinderDownloader(Viewfinder1_TilesString, "http://viewfinderpanoramas.org/dem1/", false), true);
-			HMFetcher *Fetcher2 = new HMDebugFetcher("Convert", new HMConvert(LandscapeLabel, "tif"));
-			HMFetcher *Fetcher3 = new HMDebugFetcher("Viewfinder1or3Renamer", new HMDegreeRenamer(LandscapeLabel));
-			return Fetcher1->AndThen(Fetcher2)->AndThen(Fetcher3);
+			HMFetcher *Result = new HMDebugFetcher("ViewfinderDownloader", new HMViewfinderDownloader(Viewfinder_TilesString, "http://viewfinderpanoramas.org/dem1/", false), true);
+			if (bFilterDegrees)
+			{
+				Result = Result->AndThen(new HMDebugFetcher("DegreeFilter", new HMDegreeFilter(LandscapeLabel, FilterMinLong, FilterMaxLong, FilterMinLat, FilterMaxLat)));
+			}
+			Result = Result->AndThen(new HMDebugFetcher("Convert", new HMConvert(LandscapeLabel, "tif")));
+			Result = Result->AndThen(new HMDebugFetcher("DegreeRenamer", new HMDegreeRenamer(LandscapeLabel)));
+			return Result;
 		}
 
 		case EHeightMapSourceKind::SwissALTI_3D:
@@ -172,7 +189,7 @@ bool GetPixels(FIntPoint& InsidePixels, TArray<FString> Files)
 	if (Files.IsEmpty())
 	{
 		FMessageDialog::Open(EAppMsgType::Ok,
-			LOCTEXT("ALandscapeSpawner::GetPixels", "Internal Landscape Combinator error, empty list of files when trying to read the size")
+			LOCTEXT("ALandscapeSpawner::GetPixels", "Landscape Combinator Error: Empty list of files when trying to read the size")
 		); 
 		return false;
 	}
@@ -231,7 +248,7 @@ void ALandscapeSpawner::SpawnLandscape()
 			{
 				ALandscape *CreatedLandscape = LandscapeUtils::SpawnLandscape(Fetcher->OutputFiles, LandscapeLabel, bDropData);
 
-				if (CreatedLandscape)
+				if (CreatedLandscape)	
 				{
 					CreatedLandscape->SetActorLabel(LandscapeLabel);
 
@@ -302,6 +319,10 @@ void ALandscapeSpawner::SpawnLandscape()
 					HeightmapModifier->RegisterComponent();
 					CreatedLandscape->AddInstanceComponent(HeightmapModifier);
 
+					UBlendLandscape *BlendLandscape = NewObject<UBlendLandscape>(CreatedLandscape->GetRootComponent());
+					BlendLandscape->RegisterComponent();
+					CreatedLandscape->AddInstanceComponent(BlendLandscape);
+
 					LandscapeController->OriginalCoordinates = OriginalCoordinates;
 					LandscapeController->OriginalEPSG = InitialFetcher->OutputEPSG;
 					LandscapeController->Altitudes = Altitudes;
@@ -328,7 +349,7 @@ void ALandscapeSpawner::SpawnLandscape()
 						)
 					);
 				}
-			}
+            }
 			else
 			{
 				UE_LOG(LogLandscapeCombinator, Error, TEXT("Could not create heightmaps files for Landscape %s."), *LandscapeLabel);

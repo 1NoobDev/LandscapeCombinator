@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "GDALInterface/GDALInterface.h"
+
 #include "GlobalCoordinates.generated.h"
 
 UCLASS(BlueprintType)
@@ -45,11 +47,16 @@ public:
 		meta = (DisplayPriority = "6")
 	)
 	double WorldOriginLat;
-
 	
-	void GetUnrealCoordinatesFromEPSG(double Longitude, double Latitude, FVector2D &XY);
-	void GetEPSGCoordinatesFromUnrealLocation(FVector2D Location, FVector2D& OutCoordinates);
+
+
+	/* This function is slow. If you need to call it many times, make a single OGRCoordinateTransformation
+	 * with `GetEPSGTransformer`and use this instead. */
 	bool GetUnrealCoordinatesFromEPSG(double Longitude, double Latitude, int FromEPSG, FVector2D &XY);
+	
+	OGRCoordinateTransformation *GetEPSGTransformer(int FromEPSG);
+	void GetEPSGCoordinatesFromUnrealLocation(FVector2D Location, FVector2D& OutCoordinates);
+	void GetUnrealCoordinatesFromEPSG(double Longitude, double Latitude, FVector2D &XY);
 	bool GetEPSGCoordinatesFromUnrealLocation(FVector2D Location, int ToEPSG, FVector2D& OutCoordinates);
 	bool GetEPSGCoordinatesFromUnrealLocations(FVector4d Locations, int ToEPSG, FVector4d& OutCoordinates);
 	bool GetEPSGCoordinatesFromFBox(FBox Box, int ToEPSG, FVector4d& OutCoordinates);

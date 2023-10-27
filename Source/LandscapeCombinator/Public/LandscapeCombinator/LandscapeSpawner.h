@@ -36,10 +36,11 @@ class LANDSCAPECOMBINATOR_API ALandscapeSpawner : public AActor
 
 public:
 	ALandscapeSpawner();
+	~ALandscapeSpawner();
 
-		/***********************
-	  *  Heightmap Source  *
-	  **********************/
+	/**********************
+	 *  Heightmap Source  *
+	 **********************/
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
@@ -49,9 +50,9 @@ public:
 	EHeightMapSourceKind HeightMapSourceKind;
 
 
-	/***************************
-	  *  Viewfinder Panoramas  *
-	  **************************/
+	/**************************
+	 *  Viewfinder Panoramas  *
+	 **************************/
 		
 	UPROPERTY(
 		VisibleAnywhere, Category = "LandscapeSpawner|Source",
@@ -61,9 +62,53 @@ public:
 		
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Viewfinder15", EditConditionHides, DisplayPriority = "4")
+		meta = (EditCondition =
+			"HeightMapSourceKind == EHeightMapSourceKind::Viewfinder15 || HeightMapSourceKind == EHeightMapSourceKind::Viewfinder3 || HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1",
+			EditConditionHides, DisplayPriority = "4"
+		)
 	)
-	FString Viewfinder15_TilesString;
+	FString Viewfinder_TilesString;
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
+		meta = (EditCondition =
+			"HeightMapSourceKind == EHeightMapSourceKind::Viewfinder3 || HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1",
+			EditConditionHides, DisplayPriority = "5")
+	)
+	/* The tiles of Viewfinder Panoramas 1" and 3" contain subtiles, use this option if you want to filter them. */
+	bool bFilterDegrees = false;
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
+		meta = (EditCondition =
+			"bFilterDegrees && (HeightMapSourceKind == EHeightMapSourceKind::Viewfinder3 || HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1)",
+			EditConditionHides, DisplayPriority = "6")
+	)
+	int FilterMinLong = 0;
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
+		meta = (EditCondition =
+			"bFilterDegrees && (HeightMapSourceKind == EHeightMapSourceKind::Viewfinder3 || HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1)",
+			EditConditionHides, DisplayPriority = "7")
+	)
+	int FilterMaxLong = 0;
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
+		meta = (EditCondition =
+			"bFilterDegrees && (HeightMapSourceKind == EHeightMapSourceKind::Viewfinder3 || HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1)",
+			EditConditionHides, DisplayPriority = "8")
+	)
+	int FilterMinLat = 0;
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
+		meta = (EditCondition =
+			"bFilterDegrees && (HeightMapSourceKind == EHeightMapSourceKind::Viewfinder3 || HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1)",
+			EditConditionHides, DisplayPriority = "9")
+	)
+	int FilterMaxLat = 0;
 		
 	UPROPERTY(
 		VisibleAnywhere, Category = "LandscapeSpawner|Source",
@@ -72,27 +117,15 @@ public:
 	FString Viewfinder3_Help = "Enter the comma-separated list of rectangles (e.g. L31, L32) from http://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org3.htm";
 		
 	UPROPERTY(
-		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Viewfinder3", EditConditionHides, DisplayPriority = "4")
-	)
-	FString Viewfinder3_TilesString;
-		
-	UPROPERTY(
 		VisibleAnywhere, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1", EditConditionHides, DisplayPriority = "3")
 	)
 	FString Viewfinder1_Help = "Enter the comma-separated list of rectangles (e.g. L31, L32) from http://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org1.htm";
-		
-	UPROPERTY(
-		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
-		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::Viewfinder1", EditConditionHides, DisplayPriority = "4")
-	)
-	FString Viewfinder1_TilesString;
 
 	
-	/******************
-	  *  SwissALTI3D  *
-	  *****************/
+	/*****************
+	 *  SwissALTI3D  *
+	 *****************/
 
 	UPROPERTY(
 		VisibleAnywhere, Category = "LandscapeSpawner|Source",
@@ -110,9 +143,9 @@ public:
 	FString SwissALTI3D_ListOfLinks;
 
 	
-	/*********************
-	  *  USGS One Third  *
-	  ********************/
+	/********************
+	 *  USGS One Third  *
+	 ********************/
 
 	UPROPERTY(
 		VisibleAnywhere, Category = "LandscapeSpawner|Source",
@@ -132,9 +165,9 @@ public:
 	
 
 	
-	/*******************
-	  *  Local Folder  *
-	  ******************/
+	/******************
+	 *  Local Folder  *
+	 ******************/
 
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
@@ -145,9 +178,9 @@ public:
 
 	
 
-	/*************
-	  *  Litto3D *
-	  ************/
+	/************
+	 *  Litto3D *
+	 ************/
 
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
@@ -172,37 +205,37 @@ public:
 
 
 
-	/***************
-	  *  RGE ALTI  *
-	  **************/
+	/**************
+	 *  RGE ALTI  *
+	 **************/
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "3")
 	)
 	/* Enter the minimum longitude of the bounding box in EPSG 2154 coordinates (left coordinate) */
-	int RGEALTIMinLong;
+	int RGEALTI_MinLong;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "4")
 	)
 	/* Enter the maximum longitude of the bounding box in EPSG 2154 coordinates (right coordinate) */
-	int RGEALTIMaxLong;
+	int RGEALTI_MaxLong;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "5")
 	)
 	/* Enter the minimum latitude of the bounding box in EPSG 2154 coordinates (bottom coordinate) */
-	int RGEALTIMinLat;
+	int RGEALTI_MinLat;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
 		meta = (EditCondition = "HeightMapSourceKind == EHeightMapSourceKind::RGE_ALTI", EditConditionHides, DisplayPriority = "6")
 	)
 	/* Enter the maximum latitude of the bounding box in EPSG 2154 coordinates (top coordinate) */
-	int RGEALTIMaxLat;
+	int RGEALTI_MaxLat;
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
@@ -229,9 +262,9 @@ public:
 
 	
 
-	/****************
-	  * Local Files *
-	  ***************/	
+	/***************
+	 * Local Files *
+	 ***************/	
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
@@ -242,9 +275,9 @@ public:
 
 	
 
-	/********
-	  * URL *
-	  *******/	
+	/*******
+	 * URL *
+	 *******/	
 	
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|Source",
@@ -254,9 +287,9 @@ public:
 	FString URL;
 
 
-	/*********************
-	  * General Settings *
-	  ********************/	
+	/********************
+	 * General Settings *
+	 ********************/	
 
 	UPROPERTY(
 		EditAnywhere, BlueprintReadWrite, Category = "LandscapeSpawner|General",
@@ -322,9 +355,9 @@ public:
 
 
 	
-	/**************
-	  * Actions *
-	  *************/
+	/***********
+	 * Actions *
+	 ***********/
 	
 	/* Spawn the Landscape. */
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "LandscapeSpawner",
@@ -350,7 +383,7 @@ private:
 	HMFetcher* CreateInitialFetcher();
 	HMFetcher* CreateFetcher(HMFetcher *InitialFetcher);
 
-	// After fetching the heightmaps, this holds the min max altitudes as computer by GDAL right before converting to 16-bit PNG
+	// After fetching the heightmaps, this holds the min max altitudes as computed by GDAL right before converting to 16-bit PNG
 	FVector2D Altitudes;
 };
 

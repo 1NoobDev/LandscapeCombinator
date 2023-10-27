@@ -9,7 +9,7 @@
 
 #include "BlendLandscape.generated.h"
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class HEIGHTMAPMODIFIER_API UBlendLandscape : public UActorComponent
 {
 	GENERATED_BODY()

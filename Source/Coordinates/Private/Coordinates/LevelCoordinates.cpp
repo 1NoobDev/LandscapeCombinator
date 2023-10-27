@@ -3,8 +3,12 @@
 #include "Coordinates/LevelCoordinates.h"
 
 #include "Kismet/GameplayStatics.h" 
+#include "Stats/Stats.h"
 
 #define LOCTEXT_NAMESPACE "FCoordinatesModule"
+
+DECLARE_STATS_GROUP(TEXT("Coordinates"), STATGROUP_Coordinates, STATCAT_Advanced);
+DECLARE_CYCLE_STAT(TEXT("GetUnrealCoordinatesFromEPSG"), STAT_GetUnrealCoordinatesFromEPSG, STATGROUP_Coordinates);
 
 ALevelCoordinates::ALevelCoordinates()
 {
@@ -44,6 +48,14 @@ TObjectPtr<UGlobalCoordinates> ALevelCoordinates::GetGlobalCoordinates(UWorld* W
 	}
 
 	return Cast<ALevelCoordinates>(LevelCoordinatesCandidates[0])->GlobalCoordinates;
+}
+
+
+OGRCoordinateTransformation *ALevelCoordinates::GetEPSGTransformer(UWorld* World, int EPSG)
+{
+	TObjectPtr<UGlobalCoordinates> GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(World);
+	if (!GlobalCoordinates) return nullptr;
+	return GlobalCoordinates->GetEPSGTransformer(EPSG);
 }
 
 bool ALevelCoordinates::GetUnrealCoordinatesFromEPSG(UWorld* World, double Longitude, double Latitude, int EPSG, FVector2D& OutXY)

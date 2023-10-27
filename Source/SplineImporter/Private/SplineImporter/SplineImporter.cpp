@@ -5,9 +5,7 @@
 #include "SplineImporter/Overpass.h"
 #include "FileDownloader/Download.h"
 #include "LandscapeUtils/LandscapeUtils.h"
-#include "Coordinates/LevelCoordinates.h"
 #include "GDALInterface/GDALInterface.h"
-
 
 #include "EditorSupportDelegates.h"
 #include "LandscapeStreamingProxy.h"
@@ -19,7 +17,9 @@
 #include "Logging/StructuredLog.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
 #include "Async/Async.h"
-#include "Misc/ScopedSlowTask.h" 
+#include "Misc/ScopedSlowTask.h"
+#include "Stats/Stats.h"
+#include "Stats/StatsMisc.h"
 
 #define LOCTEXT_NAMESPACE "FLandscapeCombinatorModule"
 
@@ -39,6 +39,19 @@ void ASplineImporter::GenerateSplines()
 			LOCTEXT("ASplineImporter::GenerateSplines::1", "Please select an actor on which to place your splines.")
 		);
 		return;
+	}
+	
+	if (ActorOrLandscapeToPlaceSplines->IsA<ALandscape>())
+	{
+		if (!Cast<ALandscape>(ActorOrLandscapeToPlaceSplines)->LandscapeMaterial)
+		{
+			FMessageDialog::Open(EAppMsgType::Ok,
+				LOCTEXT("ASplineImporter::GenerateSplines::NoMaterial",
+					"Please add a material to your landscape before creating splines."
+				)
+			);
+			return;
+		}
 	}
 
 	FText IntroMessage;
@@ -61,7 +74,7 @@ void ASplineImporter::GenerateSplines()
 
 		IntroMessage = FText::Format(
 			LOCTEXT("ASplineImporter::GenerateSplines::Intro1",
-				"Landscape splines will now be added to Landscape {0}. You can monitor the progress in the Output Log. "
+				"Landscape splines will now be added to Landscape {0}. You can monitor the progress in the Output Log.\n"
 				"After the splines are added, you must go to\n"
 				"Landscape Mode > Manage > Splines\n"
 				"to manage the splines as usual. By selecting all control points or all segments, and then going to their Details panel, you can choose "
@@ -94,14 +107,30 @@ void ASplineImporter::GenerateSplines()
 			TArray<TArray<OGRPoint>> PointLists = GDALInterface::GetPointLists(Dataset);
 			GDALClose(Dataset);
 			FCollisionQueryParams CollisionQueryParams = LandscapeUtils::CustomCollisionQueryParams(ActorOrLandscapeToPlaceSplines);
+			UGlobalCoordinates *GlobalCoordinates = ALevelCoordinates::GetGlobalCoordinates(this->GetWorld(), true);
+
+			if (!GlobalCoordinates)
+			{
+				return;
+			}
+
+			OGRCoordinateTransformation *OGRTransform = GlobalCoordinates->GetEPSGTransformer(4326);
+
+			if (!OGRTransform)
+			{
+				FMessageDialog::Open(EAppMsgType::Ok,
+					LOCTEXT("LandscapeNotFound", "Landscape Combinator Error: Could not create OGR Coordinate Transformation.")
+				);
+				return;
+			}
 
 			if (bUseLandscapeSplines)
 			{
-				GenerateLandscapeSplines(Landscape, CollisionQueryParams, PointLists);
+				GenerateLandscapeSplines(Landscape, CollisionQueryParams, OGRTransform, GlobalCoordinates, PointLists);
 			}
 			else
 			{
-				GenerateRegularSplines(ActorOrLandscapeToPlaceSplines, CollisionQueryParams, PointLists);
+				GenerateRegularSplines(ActorOrLandscapeToPlaceSplines, CollisionQueryParams, OGRTransform, GlobalCoordinates, PointLists);
 			}
 		}
 	});
@@ -239,7 +268,7 @@ void ASplineImporter::LoadGDALDataset(TFunction<void(GDALDataset*)> OnComplete)
 		if (OnComplete) OnComplete(LoadGDALDatasetFromFile(LocalFile));
 	}
 	else if (SplinesSource == ESourceKind::OverpassQuery)
-	{	
+	{
 		LoadGDALDatasetFromQuery(OverpassQuery, OnComplete);
 	}
 	else if (SplinesSource == ESourceKind::OverpassShortQuery)
@@ -265,9 +294,11 @@ void ASplineImporter::LoadGDALDataset(TFunction<void(GDALDataset*)> OnComplete)
 }
 
 void ASplineImporter::GenerateLandscapeSplines(
-		ALandscape *Landscape,
-		FCollisionQueryParams CollisionQueryParams,
-		TArray<TArray<OGRPoint>> &PointLists
+	ALandscape *Landscape,
+	FCollisionQueryParams CollisionQueryParams,
+	OGRCoordinateTransformation *OGRTransform,
+	UGlobalCoordinates *GlobalCoordinates,
+	TArray<TArray<OGRPoint>> &PointLists
 )
 {
 	FString LandscapeLabel = Landscape->GetActorLabel();
@@ -311,15 +342,16 @@ void ASplineImporter::GenerateLandscapeSplines(
 	for (auto &PointList : PointLists)
 	{
 		PointsTask.EnterProgressFrame();
-		AddLandscapeSplinesPoints(Landscape, CollisionQueryParams, LandscapeSplinesComponent, PointList, Points);
+		AddLandscapeSplinesPoints(Landscape, CollisionQueryParams, OGRTransform, GlobalCoordinates, LandscapeSplinesComponent, PointList, Points);
 	}
 
 	UE_LOG(LogSplineImporter, Log, TEXT("Found %d control points"), Points.Num());
 	
 	FScopedSlowTask LandscapeSplinesTask = FScopedSlowTask(NumLists,
 		FText::Format(
-			LOCTEXT("PointsTask", "Adding landscape splines from {0} lines"),
-			FText::AsNumber(NumLists)
+			LOCTEXT("PointsTask", "Adding landscape splines from {0} lines and {1} points"),
+			FText::AsNumber(NumLists),
+			FText::AsNumber(Points.Num())
 		)
 	);
 	LandscapeSplinesTask.MakeDialog();
@@ -327,7 +359,7 @@ void ASplineImporter::GenerateLandscapeSplines(
 	for (auto &PointList : PointLists)
 	{
 		LandscapeSplinesTask.EnterProgressFrame();
-		AddLandscapeSplines(Landscape, CollisionQueryParams, LandscapeSplinesComponent, PointList, Points);
+		AddLandscapeSplines(Landscape, CollisionQueryParams, OGRTransform, GlobalCoordinates, LandscapeSplinesComponent, PointList, Points);
 	}
 	
 	UE_LOG(LogSplineImporter, Log, TEXT("Added %d segments"), LandscapeSplinesComponent->GetSegments().Num());
@@ -335,11 +367,15 @@ void ASplineImporter::GenerateLandscapeSplines(
 	LandscapeSplinesComponent->AttachToComponent(Landscape->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	LandscapeSplinesComponent->MarkRenderStateDirty();
 	LandscapeSplinesComponent->PostEditChange();
+
+	GEditor->SelectActor(Landscape, true, true);
 }
 
 void ASplineImporter::AddLandscapeSplinesPoints(
 	ALandscape* Landscape,
 	FCollisionQueryParams CollisionQueryParams,
+	OGRCoordinateTransformation *OGRTransform,
+	UGlobalCoordinates *GlobalCoordinates,
 	ULandscapeSplinesComponent* LandscapeSplinesComponent,
 	TArray<OGRPoint> &PointList,
 	TMap<FVector2D, ULandscapeSplineControlPoint*> &ControlPoints
@@ -350,32 +386,38 @@ void ASplineImporter::AddLandscapeSplinesPoints(
 
 	for (OGRPoint &Point : PointList)
 	{
-		double longitude = Point.getX();
-		double latitude = Point.getY();
+		double Longitude = Point.getX();
+		double Latitude = Point.getY();
+		
+		// copy before converting
+		double ConvertedLongitude = Point.getX();
+		double ConvertedLatitude = Point.getY();
 
-		FVector2D UnrealCoordinates;
-		if (!ALevelCoordinates::GetUnrealCoordinatesFromEPSG(World, longitude, latitude, 4326, UnrealCoordinates))
+		if (!OGRTransform->Transform(1, &ConvertedLongitude, &ConvertedLatitude))
 		{	
 			FMessageDialog::Open(EAppMsgType::Ok,
-				LOCTEXT("NoLandscapeSplinesComponent", "Internal error while converting coordinates. Please check your LevelCoordinates actor")
+				LOCTEXT("NoLandscapeSplinesComponent", "Landscape Combinator Error: Internal error while converting coordinates.")
 			);
 			return;
 		}
 
-		double x = UnrealCoordinates[0];
-		double y = UnrealCoordinates[1];
+		FVector2D XY;
+		GlobalCoordinates->GetUnrealCoordinatesFromEPSG(ConvertedLongitude, ConvertedLatitude, XY);
+
+		double x = XY[0]; 
+		double y = XY[1];
 		double z;
 		if (LandscapeUtils::GetZ(World, CollisionQueryParams, x, y, z))
 		{
 			FVector Location = { x, y, z };
-			FVector LocalLocation = WorldToComponent.TransformPosition(Location);
+			FVector LocalLocation = LandscapeSplinesComponent->GetComponentToWorld().InverseTransformPosition(Location);
 			ULandscapeSplineControlPoint* ControlPoint = NewObject<ULandscapeSplineControlPoint>(LandscapeSplinesComponent, NAME_None, RF_Transactional);
 			ControlPoint->Location = LocalLocation;
 			LandscapeSplinesComponent->GetControlPoints().Add(ControlPoint);
 			ControlPoint->LayerName = "Road";
 			ControlPoint->Width = 300; // half-width in cm
 			ControlPoint->SideFalloff = 200;
-			ControlPoints.Add( { longitude, latitude } , ControlPoint);
+			ControlPoints.Add( { Longitude, Latitude } , ControlPoint);
 		}
 	}
 }
@@ -383,11 +425,13 @@ void ASplineImporter::AddLandscapeSplinesPoints(
 void ASplineImporter::AddLandscapeSplines(
 	ALandscape* Landscape,
 	FCollisionQueryParams CollisionQueryParams,
+	OGRCoordinateTransformation *OGRTransform,
+	UGlobalCoordinates *GlobalCoordinates,
 	ULandscapeSplinesComponent* LandscapeSplinesComponent,
 	TArray<OGRPoint> &PointList,
 	TMap<FVector2D, ULandscapeSplineControlPoint*> &Points
 )
-{
+{	
 	int NumPoints = PointList.Num();
 	for (int i = 0; i < NumPoints - 1; i++)
 	{
@@ -405,11 +449,13 @@ void ASplineImporter::AddLandscapeSplines(
 
 		ULandscapeSplineControlPoint *ControlPoint1 = Points[OGRLocation1];
 		ULandscapeSplineControlPoint *ControlPoint2 = Points[OGRLocation2];
-
+		
 		ControlPoint1->Modify();
 		ControlPoint2->Modify();
 
-		ULandscapeSplineSegment* NewSegment = NewObject<ULandscapeSplineSegment>(LandscapeSplinesComponent, NAME_None, RF_Transactional);
+		ULandscapeSplineSegment* NewSegment;
+		
+		NewSegment = NewObject<ULandscapeSplineSegment>(LandscapeSplinesComponent, NAME_None, RF_Transactional);
 		LandscapeSplinesComponent->GetSegments().Add(NewSegment);
 		
 		NewSegment->LayerName = "Road";
@@ -417,24 +463,26 @@ void ASplineImporter::AddLandscapeSplines(
 		NewSegment->Connections[1].ControlPoint = ControlPoint2;
 
 		float TangentLen = (ControlPoint2->Location - ControlPoint1->Location).Size() / LandscapeSplinesStraightness;
+
 		NewSegment->Connections[0].TangentLen = TangentLen;
 		NewSegment->Connections[1].TangentLen = TangentLen;
 		NewSegment->AutoFlipTangents();
-
 		ControlPoint1->ConnectedSegments.Add(FLandscapeSplineConnection(NewSegment, 0));
 		ControlPoint2->ConnectedSegments.Add(FLandscapeSplineConnection(NewSegment, 1));
-
 		ControlPoint1->AutoCalcRotation();
 		ControlPoint2->AutoCalcRotation();
 		
-		ControlPoint1->UpdateSplinePoints();
-		ControlPoint2->UpdateSplinePoints();
+		// Update is Slow
+		//ControlPoint1->UpdateSplinePoints();
+		//ControlPoint2->UpdateSplinePoints();
 	}
 }
 
 void ASplineImporter::GenerateRegularSplines(
 	AActor *Actor,
 	FCollisionQueryParams CollisionQueryParams,
+	OGRCoordinateTransformation *OGRTransform,
+	UGlobalCoordinates *GlobalCoordinates,
 	TArray<TArray<OGRPoint>> &PointLists
 )
 {
@@ -470,7 +518,7 @@ void ASplineImporter::GenerateRegularSplines(
 	for (auto &PointList : PointLists)
 	{
 		SplinesTask.EnterProgressFrame();
-		AddRegularSpline(Actor, SplineCollection, CollisionQueryParams, PointList);
+		AddRegularSpline(Actor, SplineCollection, CollisionQueryParams, OGRTransform, GlobalCoordinates, PointList);
 	}
 	
 	GEditor->SelectActor(this, false, true);
@@ -482,6 +530,8 @@ void ASplineImporter::AddRegularSpline(
 	AActor* Actor,
 	ASplineCollection* SplineCollection,
 	FCollisionQueryParams CollisionQueryParams,
+	OGRCoordinateTransformation *OGRTransform,
+	UGlobalCoordinates *GlobalCoordinates,
 	TArray<OGRPoint> &PointList
 )
 {
@@ -501,23 +551,29 @@ void ASplineImporter::AddRegularSpline(
 
 	for (int i = 0; i < NumPoints; i++)
 	{
-		OGRPoint Point = PointList[i];
-		double longitude = Point.getX();
-		double latitude = Point.getY();
-
 		if (Last != First || i < NumPoints - 1) // don't add last point in case the spline is a closed loop
 		{
-			FVector2D UnrealCoordinates;
-			if (!ALevelCoordinates::GetUnrealCoordinatesFromEPSG(World, longitude, latitude, 4326, UnrealCoordinates))
+			OGRPoint Point = PointList[i];
+			double Longitude = Point.getX();
+			double Latitude = Point.getY();
+		
+			// copy before converting
+			double ConvertedLongitude = Longitude;
+			double ConvertedLatitude = Latitude;
+				
+			if (!OGRTransform->Transform(1, &ConvertedLongitude, &ConvertedLatitude))
 			{	
 				FMessageDialog::Open(EAppMsgType::Ok,
-					LOCTEXT("NoLandscapeSplinesComponent", "Internal error while converting coordinates. Please check your LevelCoordinates actor")
+					LOCTEXT("NoLandscapeSplinesComponent", "Landscape Combinator Error: Internal error while converting coordinates.")
 				);
 				return;
 			}
+			
+			FVector2D XY;
+			GlobalCoordinates->GetUnrealCoordinatesFromEPSG(ConvertedLongitude, ConvertedLatitude, XY);
 
-			double x = UnrealCoordinates[0];
-			double y = UnrealCoordinates[1];
+			double x = XY[0];
+			double y = XY[1];
 			double z;
 			if (LandscapeUtils::GetZ(World, CollisionQueryParams, x, y, z))
 			{

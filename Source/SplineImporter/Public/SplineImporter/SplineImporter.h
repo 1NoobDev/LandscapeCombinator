@@ -4,6 +4,7 @@
 
 #include "LogSplineImporter.h"
 #include "SplineImporter/SplineCollection.h"
+#include "Coordinates/LevelCoordinates.h"
 
 #include "Landscape.h"
 #include "Components/SplineComponent.h" 
@@ -103,12 +104,16 @@ private:
 	void GenerateLandscapeSplines(
 		ALandscape *Landscape,
 		FCollisionQueryParams CollisionQueryParams,
+		OGRCoordinateTransformation *OGRTransform,
+		UGlobalCoordinates *GlobalCoordinates,
 		TArray<TArray<OGRPoint>> &PointLists
 	);
 
 	void AddLandscapeSplinesPoints(
 		ALandscape* Landscape,
 		FCollisionQueryParams CollisionQueryParams,
+		OGRCoordinateTransformation *OGRTransform,
+		UGlobalCoordinates *GlobalCoordinates,
 		ULandscapeSplinesComponent* LandscapeSplinesComponent,
 		TArray<OGRPoint> &PointList,
 		TMap<FVector2D, ULandscapeSplineControlPoint*> &Points
@@ -117,6 +122,8 @@ private:
 	void AddLandscapeSplines(
 		ALandscape* Landscape,
 		FCollisionQueryParams CollisionQueryParams,
+		OGRCoordinateTransformation *OGRTransform,
+		UGlobalCoordinates *GlobalCoordinates,
 		ULandscapeSplinesComponent* LandscapeSplinesComponent,
 		TArray<OGRPoint> &PointList,
 		TMap<FVector2D, ULandscapeSplineControlPoint*> &Points
@@ -125,6 +132,8 @@ private:
 	void GenerateRegularSplines(
 		AActor *Actor,
 		FCollisionQueryParams CollisionQueryParams,
+		OGRCoordinateTransformation *OGRTransform,
+		UGlobalCoordinates *GlobalCoordinates,
 		TArray<TArray<OGRPoint>> &PointLists
 	);
 
@@ -132,6 +141,8 @@ private:
 		AActor* Actor,
 		ASplineCollection* SplineCollection,
 		FCollisionQueryParams CollisionQueryParams,
+		OGRCoordinateTransformation *OGRTransform,
+		UGlobalCoordinates *GlobalCoordinates,
 		TArray<OGRPoint> &PointList
 	);
 };

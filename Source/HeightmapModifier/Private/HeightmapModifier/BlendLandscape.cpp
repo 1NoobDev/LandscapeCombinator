@@ -97,17 +97,17 @@ void UBlendLandscape::BlendWithLandscape()
 			
 		int32 OtherTotalSizeX = LandscapeToBlendWith->ComputeComponentCounts().X * LandscapeToBlendWith->ComponentSizeQuads + 1;
 		int32 OtherTotalSizeY = LandscapeToBlendWith->ComputeComponentCounts().Y * LandscapeToBlendWith->ComponentSizeQuads + 1;
-		int32 OtherX1 = FMath::Min(OtherTotalSizeX - 1, FMath::Max(0, OtherTopLeft.X + 1));
-		int32 OtherX2 = FMath::Min(OtherTotalSizeX - 1, FMath::Max(0, OtherBottomRight.X - 1));
-		int32 OtherY1 = FMath::Min(OtherTotalSizeY - 1, FMath::Max(0, OtherTopLeft.Y + 1));
-		int32 OtherY2 = FMath::Min(OtherTotalSizeY - 1, FMath::Max(0, OtherBottomRight.Y - 1));
+		int32 OtherX1 = FMath::Min(OtherTotalSizeX - 1, FMath::Max(0, OtherTopLeft.X));
+		int32 OtherX2 = FMath::Min(OtherTotalSizeX - 1, FMath::Max(0, OtherBottomRight.X));
+		int32 OtherY1 = FMath::Min(OtherTotalSizeY - 1, FMath::Max(0, OtherTopLeft.Y));
+		int32 OtherY2 = FMath::Min(OtherTotalSizeY - 1, FMath::Max(0, OtherBottomRight.Y));
 		int32 OtherSizeX = OtherX2 - OtherX1 + 1;
 		int32 OtherSizeY = OtherY2 - OtherY1 + 1;
 
 		if (OtherSizeX <= 0 || OtherSizeY <= 0)
 		{
 			FMessageDialog::Open(EAppMsgType::Ok, FText::Format(
-				LOCTEXT("UBlendLandscape::BlendWithLandscape::2", "Could not blend with Landscape{0}."),
+				LOCTEXT("UBlendLandscape::BlendWithLandscape::2", "Could not blend with Landscape{0}. Its resolution might be too small."),
 				FText::FromString(LandscapeToBlendWith->GetActorLabel())
 			));
 			return;

@@ -12,9 +12,9 @@ int HMDegreeRenamer::TileToX(FString Tile) const
 	FString Direction = Matcher.GetCaptureGroup(1);
 	FString Degrees = Matcher.GetCaptureGroup(2);
 	if (Direction == "W" || Direction == "w")
-		return 180 - FCString::Atoi(*Degrees);
+		return - FCString::Atoi(*Degrees);
 	else
-		return 180 + FCString::Atoi(*Degrees);
+		return FCString::Atoi(*Degrees);
 }
 
 int HMDegreeRenamer::TileToY(FString Tile) const
@@ -25,8 +25,8 @@ int HMDegreeRenamer::TileToY(FString Tile) const
 	FString Direction = Matcher.GetCaptureGroup(1);
 	FString Degrees = Matcher.GetCaptureGroup(2);
 	if (Direction == "N" || Direction == "n")
-		return 83 - FCString::Atoi(*Degrees);
+		return - FCString::Atoi(*Degrees);
 	else
-		return 83 + FCString::Atoi(*Degrees);
+		return FCString::Atoi(*Degrees);
 }
 

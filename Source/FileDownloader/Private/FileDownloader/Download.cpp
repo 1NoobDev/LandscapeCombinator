@@ -18,9 +18,9 @@ TMap<FString, int> ExpectedSizeCache;
 
 FString Shorten(FString Input)
 {
-	if (Input.Len() > 53)
+	if (Input.Len() > 83)
 	{
-		return Input.Left(25) + "..." + Input.Right(25);
+		return Input.Left(40) + "..." + Input.Right(40);
 	}
 	else
 	{

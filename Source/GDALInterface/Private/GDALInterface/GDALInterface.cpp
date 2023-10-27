@@ -4,6 +4,7 @@
 #include "GDALInterface/LogGDALInterface.h"
 
 #include "Misc/Paths.h"
+#include "Misc/ScopedSlowTask.h"
 
 #define LOCTEXT_NAMESPACE "FGDALInterfaceModule"
 
@@ -137,6 +138,7 @@ bool GDALInterface::GetCoordinates(FVector4d& Coordinates, TArray<FString> Files
 		FVector4d FileCoordinates;
 		if (!GDALInterface::GetCoordinates(FileCoordinates, Dataset))
 		{
+			GDALClose(Dataset);
 			FMessageDialog::Open(EAppMsgType::Ok,
 				FText::Format(
 					LOCTEXT("GetCoordinatesError", "Could not read coordinates from heightmap file '{0}'."),
@@ -145,6 +147,7 @@ bool GDALInterface::GetCoordinates(FVector4d& Coordinates, TArray<FString> Files
 			);
 			return false;
 		}
+		GDALClose(Dataset);
 		MinCoordWidth  = FMath::Min(MinCoordWidth, FileCoordinates[0]);
 		MaxCoordWidth  = FMath::Max(MaxCoordWidth, FileCoordinates[1]);
 		MinCoordHeight = FMath::Min(MinCoordHeight, FileCoordinates[2]);
@@ -300,6 +303,7 @@ bool GDALInterface::Translate(FString &SourceFile, FString &TargetFile, TArray<F
 			LOCTEXT("ConvertParseOptionsError", "Internal GDAL error while parsing GDALTranslate options for file {0}."),
 			FText::FromString(SourceFile)
 		));
+		GDALClose(SourceDataset);
 		return false;
 	}
 
@@ -524,13 +528,31 @@ void GDALInterface::AddPointList(OGRLineString* LineString, TArray<TArray<OGRPoi
 TArray<TArray<OGRPoint>> GDALInterface::GetPointLists(GDALDataset *Dataset)
 {
 	TArray<TArray<OGRPoint>> PointLists;
+
+	int FeatureCount = 0;
+	for (auto Layer : Dataset->GetLayers())
+	{
+		FeatureCount += Layer->GetFeatureCount();
+	}
+	
+	FScopedSlowTask FeaturesTask = FScopedSlowTask(0,
+		FText::Format(
+			LOCTEXT("PointsTask", "Reading Features from Dataset..."),
+			FText::AsNumber(FeatureCount)
+		)
+	);
+	FeaturesTask.MakeDialog(true);
 	
 	OGRFeature *Feature;
 	OGRLayer *Layer;
-
 	Feature = Dataset->GetNextFeature(&Layer, nullptr, nullptr, nullptr);
 	while (Feature)
 	{
+		if (FeaturesTask.ShouldCancel())
+		{
+			return TArray<TArray<OGRPoint>>();
+		}
+
 		OGRGeometry* Geometry = Feature->GetGeometryRef();
 		if (!Geometry) continue;
 
@@ -555,7 +577,7 @@ TArray<TArray<OGRPoint>> GDALInterface::GetPointLists(GDALDataset *Dataset)
 		Feature = Dataset->GetNextFeature(&Layer, nullptr, nullptr, nullptr);
 	}
 
-	UE_LOG(LogGDALInterface, Log, TEXT("Found %d list of points"), PointLists.Num());
+	UE_LOG(LogGDALInterface, Log, TEXT("Found %d lists of points"), PointLists.Num());
 
 	return PointLists;
 }

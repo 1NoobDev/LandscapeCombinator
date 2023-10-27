@@ -35,6 +35,12 @@ void HMDebugFetcher::Fetch(int InputEPSG, TArray<FString> InputFiles, TFunction<
 			else
 			{
 				UE_LOG(LogLandscapeCombinator, Error, TEXT("Phase %s failed."), *Name);
+				FMessageDialog::Open(EAppMsgType::Ok,
+					FText::Format(
+						LOCTEXT("HMDebugFetcher::Fetch", "Landscape Combinator Error: There was an error during Phase {0}."),
+						FText::FromString(Name)
+					)
+				);
 				if (OnComplete) OnComplete(false);
 			}
 		});
