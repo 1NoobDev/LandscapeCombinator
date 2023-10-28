@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creating Landscapes &mdash; Landscape Combinator  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Blending Landscapes" href="blending.html" />
+    <link rel="prev" title="Coordinates" href="coordinates.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Landscape Combinator
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coordinates.html">Coordinates</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Creating Landscapes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#landscapespawner-overview">LandscapeSpawner Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#miscellaneous-settings">Miscellaneous Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#heightmap-sources">Heightmap Sources</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#viewfinder-panoramas">Viewfinder Panoramas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usgs-1-3">USGS 1/3”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rge-alti">RGE ALTI®</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#swissalti3d-swisstopo">swissALTI3D (©swisstopo)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#litto-3d-guadeloupe">Litto 3D Guadeloupe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#local-file">Local File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#local-folder">Local Folder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#url">URL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#preprocessing">Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resolution-scaling">Resolution Scaling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#landscape-material">Landscape Material</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="blending.html">Blending Landscapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="splines.html">Importing Splines and Landscape Splines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ogrfilter.html">Using OpenStreetMap Areas in PCG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Building From Spline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="credit.html">Credit</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Landscape Combinator</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Creating Landscapes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/heightmaps.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="creating-landscapes">
+<span id="heightmaps"></span><h1>Creating Landscapes<a class="headerlink" href="#creating-landscapes" title="Link to this heading"></a></h1>
+<section id="landscapespawner-overview">
+<h2>LandscapeSpawner Overview<a class="headerlink" href="#landscapespawner-overview" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Search for <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code>. You will find <code class="docutils literal notranslate"><span class="pre">BP_LandscapeSpawner_Example</span></code> classes, and the main <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code> class.</p></li>
+<li><p>Drag any of these examples in your level, or the main <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code> class, where you can setup your heightmap sources manually.</p></li>
+<li><p>In the Details Panel of the <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code>, click on <code class="docutils literal notranslate"><span class="pre">Spawn</span> <span class="pre">Landscape</span></code>.</p></li>
+</ol>
+</section>
+<section id="miscellaneous-settings">
+<h2>Miscellaneous Settings<a class="headerlink" href="#miscellaneous-settings" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Drop Data (bool)</strong>:
+When the landscape components do not exactly match with the total size of the heightmaps,
+Unreal Engine adds some padding at the border. Check this option if you are willing to
+drop some data at the border in order to make your heightmaps exactly match the landscape
+components.</p></li>
+<li><p><strong>ZScale (double)</strong>:
+<code class="docutils literal notranslate"><span class="pre">ZScale</span> <span class="pre">=</span> <span class="pre">1</span></code> means that one altitude unit (usually meters) in your heightmaps corresponds to 100 cm in Unreal Engine in the Z-axis.</p></li>
+</ul>
+</section>
+<section id="heightmap-sources">
+<h2>Heightmap Sources<a class="headerlink" href="#heightmap-sources" title="Link to this heading"></a></h2>
+<p>Here are the heightmap sources that are supported by Landscape Combinator. Feel free to suggest new sources on:
+<a class="reference external" href="https://github.com/LandscapeCombinator/LandscapeCombinator/issues">GitHub</a>
+and I will make my best to add them.</p>
+<section id="viewfinder-panoramas">
+<h3>Viewfinder Panoramas<a class="headerlink" href="#viewfinder-panoramas" title="Link to this heading"></a></h3>
+<p>Please <a class="reference internal" href="installation.html#installation"><span class="std std-ref">make sure</span></a> that you have 7Z installed if you want to use Viewfinder Panoramas.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="http://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org1.htm">Viewfinder Panoramas 1”</a>:
+Highest resolution, around 30 meters per pixel.
+In a <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code>, choose “Viewfinder Panoramas 1” and enter the comma-separated list of rectangles (e.g. L31, L32).</p></li>
+<li><p><a class="reference external" href="http://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org3.htm">Viewfinder Panoramas 3”</a>:
+Intermadiate resolution, around 90 meters per pixel.
+In a <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code>, choose “Viewfinder Panoramas 3” and enter the comma-separated list of rectangles (e.g. L31, L32).</p></li>
+<li><p><a class="reference external" href="http://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org15.htm">Viewfinder Panoramas 15”</a>:
+Lowest resolution, around 450 meters per pixel.
+In a <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code>, choose “Viewfinder Panoramas 15” and enter the comma-separated list of rectangles (e.g. 15-A, 15-B, 15-G, 15-H).</p></li>
+</ul>
+</section>
+<section id="usgs-1-3">
+<h3>USGS 1/3”<a class="headerlink" href="#usgs-1-3" title="Link to this heading"></a></h3>
+<p>This is 1/3” or around 10 meters per pixel data for the United States.</p>
+<ul class="simple">
+<li><p>Go to the <a class="reference external" href="https://apps.nationalmap.gov/downloader/">USGS National Map Data Download Application</a>.</p></li>
+<li><p>In the Datasets tab, click “Elevation Products (3DEP)”. Unselect everything except “1/3 arc-second DEM” and “Current” underneath.</p></li>
+<li><p>Zoom on the area for which you want to download heightmaps.</p></li>
+<li><p>Click on “Search Products”.</p></li>
+<li><p>In the “Products” tab, you can visualize the tiles that will be downloaded.</p></li>
+<li><p>If you want all the tiles suggested here, click on the TXT button (not CSV) to download the list of links.</p></li>
+<li><p>If you want only some of the tiles, add the ones that you want to your Cart, and click the TXT button here to download the list of links.</p></li>
+<li><p>In the Details Panel of a <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code>, choose <code class="docutils literal notranslate"><span class="pre">USGS</span> <span class="pre">One</span> <span class="pre">Third</span></code> as a source, and enter the path to the TXT file on your computer.</p></li>
+</ul>
+</section>
+<section id="rge-alti">
+<h3>RGE ALTI®<a class="headerlink" href="#rge-alti" title="Link to this heading"></a></h3>
+<p>This is very high resolution data, 1 meter per pixel, for Metropolitan France.
+Enter the <code class="docutils literal notranslate"><span class="pre">MinLong</span> <span class="pre">(Left),</span> <span class="pre">MaxLong</span> <span class="pre">(Right),</span> <span class="pre">MinLat</span> <span class="pre">(Bottom),</span> <span class="pre">MaxLat</span> <span class="pre">(Top)</span></code> <a class="reference external" href="https://epsg.io/map#srs=2154">EPSG 2154</a> coordinates
+of the area that you want to use. Optionally, and especially if the area that you are covering is too large, use the
+<code class="docutils literal notranslate"><span class="pre">Resize</span> <span class="pre">RGE</span> <span class="pre">ALTI</span> <span class="pre">Using</span> <span class="pre">Web</span> <span class="pre">API</span></code> option to resize the heightmap before downloading it. The largest heightmap size supported by
+this API is 10000 x 10000.</p>
+</section>
+<section id="swissalti3d-swisstopo">
+<h3>swissALTI3D (©swisstopo)<a class="headerlink" href="#swissalti3d-swisstopo" title="Link to this heading"></a></h3>
+<p>This is very high resolution data, 0.5 meter per pixel, for Switzerland. It uses EPSG 2056.</p>
+<ul class="simple">
+<li><p>Go to the <a class="reference external" href="https://www.swisstopo.admin.ch/en/geodata/height/alti3d.html">swisstopo website</a>.</p></li>
+<li><p>In Section “swissALTI3D - Access to geodata”, choose “Selection by rectangle”.</p></li>
+<li><p>Zoom on the map to the area that you wish to download.</p></li>
+<li><p>Click on “New rectangle”, and draw a rectangle in the area that you want to download.</p></li>
+<li><p>Choose the resolution, 0.5m per pixel is the best resolution but will lead to heavy heightmaps.</p></li>
+<li><p>Click on “Search”.</p></li>
+<li><p>Click on “Export all links” and then on “File ready. Click here to download”.</p></li>
+<li><p>In the Details Panel of a <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code>, choose <code class="docutils literal notranslate"><span class="pre">Swiss</span> <span class="pre">ALTI</span> <span class="pre">3D</span></code> as a source, and enter the path to the CSV file on your computer.</p></li>
+</ul>
+</section>
+<section id="litto-3d-guadeloupe">
+<h3>Litto 3D Guadeloupe<a class="headerlink" href="#litto-3d-guadeloupe" title="Link to this heading"></a></h3>
+<p>Please <a class="reference internal" href="installation.html#installation"><span class="std std-ref">make sure</span></a> that you have 7Z installed if you want to use Litto 3D Guadeloupe.
+This is very high resolution data, 1 meter per pixel, for Guadeloupe. It uses EPSG 4559.</p>
+<ul class="simple">
+<li><p>Go to the <a class="reference external" href="https://diffusion.shom.fr/litto3d-guad2016.html">Litto 3D Guadeloupe website</a>.</p></li>
+<li><p>Click on “Télécharger”.</p></li>
+<li><p>Click on the areas that you want to download.</p></li>
+<li><p>Click on “Télécharger la sélection”.</p></li>
+<li><p>Move all the 7z files that you have downloaded into a new folder.</p></li>
+<li><p>In the Details Panel of a <code class="docutils literal notranslate"><span class="pre">LandscapeSpawner</span></code>, choose <code class="docutils literal notranslate"><span class="pre">Litto</span> <span class="pre">3D</span> <span class="pre">Guadeloupe</span></code> as a source, and enter the path to the new folder on your computer.</p></li>
+</ul>
+</section>
+<section id="local-file">
+<h3>Local File<a class="headerlink" href="#local-file" title="Link to this heading"></a></h3>
+<p>Enter the path to a georeferenced file on your computer.</p>
+</section>
+<section id="local-folder">
+<h3>Local Folder<a class="headerlink" href="#local-folder" title="Link to this heading"></a></h3>
+<p>Enter the path to a folder containing files named following the <code class="docutils literal notranslate"><span class="pre">_x0_y0</span></code> convention.</p>
+</section>
+<section id="url">
+<h3>URL<a class="headerlink" href="#url" title="Link to this heading"></a></h3>
+<p>Enter an URL to a georeferenced heightmap.</p>
+</section>
+</section>
+<section id="preprocessing">
+<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Link to this heading"></a></h2>
+<p>You can preprocess downloaded heightmaps using the following options.
+(These options are also available in the <code class="docutils literal notranslate"><span class="pre">HeightmapModifier</span></code> component that is attached to created landscapes).</p>
+<ul class="simple">
+<li><p><strong>Preprocess (bool)</strong>:
+Check this option if you want to run an external binary to prepare the heightmaps right after fetching them.</p></li>
+<li><p><strong>Command (FString)</strong>:
+Enter the name of the binary, which should be in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>, and which will be used on your heightmap.
+Your processing command must take exactly two arguments: the input file and the output file.</p></li>
+</ul>
+</section>
+<section id="resolution-scaling">
+<h2>Resolution Scaling<a class="headerlink" href="#resolution-scaling" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Change Resolution (bool)</strong>:
+Check this option if you want to scale your heightmap resolution up or down using GDAL.</p></li>
+<li><p><strong>Precision Percent (int)</strong>:
+Depending on the sizes of your heightmaps, you can use a small value under <code class="docutils literal notranslate"><span class="pre">100%</span></code> to make
+importing the landscape faster. For heightmaps which are low resolution, you can use a value
+above <code class="docutils literal notranslate"><span class="pre">100%</span></code> in order to have a better landscape grid size within Unreal Engine to be able
+to paint or sculpt things. Upscaling will however not add details that were not there in the
+original heightmaps.</p></li>
+</ul>
+</section>
+<section id="landscape-material">
+<h2>Landscape Material<a class="headerlink" href="#landscape-material" title="Link to this heading"></a></h2>
+<p>There is a landscape material <code class="docutils literal notranslate"><span class="pre">MI_Landscape</span></code> in the plugin that has the following features:</p>
+<ul class="simple">
+<li><p>Au auto layer called <code class="docutils literal notranslate"><span class="pre">Mix</span></code> (with adjustable snow, grass, cliff, and road materials).</p></li>
+<li><p>Adjustable height above which there is snow instead of grass.</p></li>
+<li><p>The cliff material goes on slopes which are steeper than a certain threshold.</p></li>
+<li><p>You can tint the materials with custom colors, and adjust saturation and brightness.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="coordinates.html" class="btn btn-neutral float-left" title="Coordinates" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="blending.html" class="btn btn-neutral float-right" title="Blending Landscapes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Landscape Combinator.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
